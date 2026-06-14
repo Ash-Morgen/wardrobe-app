@@ -81,6 +81,99 @@ sampleClothing.forEach((item) => {
   clothingStore.set(uuidv4(), item as Clothing);
 });
 
+// Helper function to remove background based on corner color detection
+async function removeBackgroundByColor(buffer: Buffer): Promise<Buffer> {
+  try {
+    // Step 1: Resize for faster processing
+    const resized = await sharp(buffer)
+      .resize(400, 400, { fit: 'inside', withoutEnlargement: true })
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    
+    const { data: rawData, info } = resized;
+    const { width, height, channels } = info;
+    
+    // Step 2: Sample corners to detect background color
+    const corners: [number, number, number][] = [];
+    const cornerPositions = [
+      [0, 0], [width - 1, 0], [0, height - 1], [width - 1, height - 1],
+      [Math.floor(width / 2), 0], [Math.floor(width / 2), height - 1],
+      [0, Math.floor(height / 2)], [width - 1, Math.floor(height / 2)]
+    ];
+    
+    cornerPositions.forEach(([x, y]) => {
+      const idx = (y * width + x) * channels;
+      corners.push([rawData[idx], rawData[idx + 1], rawData[idx + 2]]);
+    });
+    
+    // Calculate average corner color
+    const bgR = Math.round(corners.reduce((sum, c) => sum + c[0], 0) / corners.length);
+    const bgG = Math.round(corners.reduce((sum, c) => sum + c[1], 0) / corners.length);
+    const bgB = Math.round(corners.reduce((sum, c) => sum + c[2], 0) / corners.length);
+    
+    console.log('Detected background color (RGB):', bgR, bgG, bgB);
+    
+    // Check if background is light colored (white, light gray, etc.)
+    const brightness = (bgR + bgG + bgB) / 3;
+    if (brightness < 180) {
+      console.log('Background is dark, skipping background removal');
+      return buffer;
+    }
+    
+    // Step 3: Create alpha channel - make background transparent
+    // Calculate color distance threshold
+    const threshold = 50; // Color distance threshold for background detection
+    
+    // Create output buffer with alpha channel
+    const outputData = Buffer.alloc(width * height * 4); // RGBA
+    
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const srcIdx = (y * width + x) * channels;
+        const dstIdx = (y * width + x) * 4;
+        
+        const r = rawData[srcIdx];
+        const g = channels >= 3 ? rawData[srcIdx + 1] : r;
+        const b = channels >= 3 ? rawData[srcIdx + 2] : r;
+        
+        // Calculate color distance from background
+        const dist = Math.sqrt(
+          Math.pow(r - bgR, 2) + 
+          Math.pow(g - bgG, 2) + 
+          Math.pow(b - bgB, 2)
+        );
+        
+        // Calculate edge proximity for soft edge
+        const edgeDist = Math.min(x, y, width - 1 - x, height - 1 - y);
+        const edgeFactor = Math.min(1, edgeDist / 5); // 5 pixel soft edge
+        
+        // Determine alpha based on distance from background color
+        let alpha: number;
+        if (dist < threshold) {
+          alpha = Math.round(255 * (1 - (dist / threshold)) * edgeFactor);
+        } else {
+          alpha = 255;
+        }
+        
+        outputData[dstIdx] = r;
+        outputData[dstIdx + 1] = g;
+        outputData[dstIdx + 2] = b;
+        outputData[dstIdx + 3] = alpha;
+      }
+    }
+    
+    // Step 4: Convert back to PNG with transparency
+    return await sharp(outputData, {
+      raw: { width, height, channels: 4 }
+    })
+      .png()
+      .toBuffer();
+  } catch (error) {
+    console.error('Background removal error:', error);
+    return buffer;
+  }
+}
+
 // Categories configuration
 const CATEGORIES = [
   { id: 'tops', name: '上衣', subcategories: ['T恤', '衬衫', '卫衣', '毛衣', '针织衫'] },
@@ -101,7 +194,7 @@ app.get('/api/v1/categories', (req: Request, res: Response) => {
   res.json({ success: true, data: CATEGORIES });
 });
 
-// Upload and process clothing image (with background removal simulation)
+// Upload and process clothing image (with automatic background removal)
 app.post('/api/v1/clothing/upload', upload.single('file'), async (req: Request, res: Response) => {
   try {
     if (!req.file) {
@@ -112,28 +205,51 @@ app.post('/api/v1/clothing/upload', upload.single('file'), async (req: Request, 
     const fileId = uuidv4();
     const fileBuffer = req.file.buffer;
     const contentType = req.file.mimetype || 'image/png';
-    const ext = contentType.split('/')[1] || 'png';
+    const ext = 'png'; // Output as PNG for transparency support
 
-    // Process image with sharp (resize) - skip if fails
-    let uploadBuffer = fileBuffer;
+    console.log('Starting background removal for image:', fileId);
+
+    // Step 1: Remove background based on corner color detection
+    let processedBuffer: Buffer;
     try {
-      uploadBuffer = await sharp(fileBuffer)
-        .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
-        .png()
-        .toBuffer();
-    } catch (sharpError) {
-      console.warn('Sharp processing failed, uploading original:', sharpError);
-      uploadBuffer = fileBuffer;
+      processedBuffer = await removeBackgroundByColor(fileBuffer);
+      console.log('Background removed successfully, size:', processedBuffer.length);
+    } catch (bgRemovalError) {
+      console.warn('Background removal failed, using original image:', bgRemovalError);
+      // Fallback: use original image if background removal fails
+      processedBuffer = fileBuffer;
     }
 
-    // Upload to S3 storage
+    // Step 2: Resize the processed image (ensure alpha channel is preserved)
+    let uploadBuffer = processedBuffer;
+    try {
+      const processedMeta = await sharp(processedBuffer).metadata();
+      // Only resize if the image is larger than 800x800
+      if (processedMeta.width && processedMeta.height && 
+          (processedMeta.width > 800 || processedMeta.height > 800)) {
+        uploadBuffer = await sharp(processedBuffer)
+          .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
+          .png({ compressionLevel: 9 })
+          .toBuffer();
+      } else {
+        // Just ensure it's PNG format without extra processing
+        uploadBuffer = await sharp(processedBuffer)
+          .png({ compressionLevel: 9 })
+          .toBuffer();
+      }
+    } catch (sharpError) {
+      console.warn('Sharp processing failed, using processed image:', sharpError);
+      uploadBuffer = processedBuffer;
+    }
+
+    // Step 3: Upload to S3 storage
     const key = await s3Storage.uploadFile({
       fileContent: uploadBuffer,
       fileName: `clothing/${fileId}.${ext}`,
-      contentType: contentType,
+      contentType: 'image/png',
     });
 
-    // Generate presigned URL for the uploaded image
+    // Step 4: Generate presigned URL for the uploaded image
     const imageUrl = await s3Storage.generatePresignedUrl({
       key: key,
       expireTime: 86400 * 30, // 30 days
