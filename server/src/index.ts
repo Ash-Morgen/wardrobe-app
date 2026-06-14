@@ -365,7 +365,7 @@ app.use((err: any, req: Request, res: Response, next: any) => {
   next(err);
 });
 
-app.listen(port, () => {
-  console.log(`Wardrobe server listening at http://localhost:${port}/`);
+app.listen(Number(port), '0.0.0.0', () => {
+  console.log(`Wardrobe server listening at http://0.0.0.0:${port}/`);
   console.log(`Categories: ${CATEGORIES.map(c => c.name).join(', ')}`);
 });
