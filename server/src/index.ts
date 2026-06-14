@@ -6,6 +6,16 @@ import sharp from "sharp";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import fs from "fs";
+import { S3Storage } from "coze-coding-dev-sdk";
+
+// Initialize S3 Storage
+const s3Storage = new S3Storage({
+  endpointUrl: process.env.COZE_BUCKET_ENDPOINT_URL,
+  accessKey: "",
+  secretKey: "",
+  bucketName: process.env.COZE_BUCKET_NAME,
+  region: "cn-beijing",
+});
 
 const app = express();
 const port = process.env.PORT || 9091;
@@ -15,15 +25,9 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// File upload config - store in /tmp
-const uploadDir = '/tmp/wardrobe-uploads';
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.memoryStorage();
+// File upload config - store in memory (will upload to S3)
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 50 * 1024 * 1024 }
 });
 
@@ -106,33 +110,41 @@ app.post('/api/v1/clothing/upload', upload.single('file'), async (req: Request, 
     }
 
     const fileId = uuidv4();
-    const originalPath = path.join(uploadDir, `${fileId}-original.png`);
-    const processedPath = path.join(uploadDir, `${fileId}-processed.png`);
+    const fileBuffer = req.file.buffer;
+    const contentType = req.file.mimetype || 'image/png';
+    const ext = contentType.split('/')[1] || 'png';
 
-    // Save original image
-    await sharp(req.file.buffer).png().toFile(originalPath);
+    // Process image with sharp (resize) - skip if fails
+    let uploadBuffer = fileBuffer;
+    try {
+      uploadBuffer = await sharp(fileBuffer)
+        .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
+        .png()
+        .toBuffer();
+    } catch (sharpError) {
+      console.warn('Sharp processing failed, uploading original:', sharpError);
+      uploadBuffer = fileBuffer;
+    }
 
-    // Simulate background removal using sharp
-    // In production, use remove.bg API or similar service
-    // For demo, we'll resize the image to reasonable size
-    const processedBuffer = await sharp(req.file.buffer)
-      .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
-      .png()
-      .toBuffer();
+    // Upload to S3 storage
+    const key = await s3Storage.uploadFile({
+      fileContent: uploadBuffer,
+      fileName: `clothing/${fileId}.${ext}`,
+      contentType: contentType,
+    });
 
-    await sharp(processedBuffer).toFile(processedPath);
-
-    // Generate URLs - use public URL format for preview environment
-    const baseUrl = getPublicUrl(req);
-    const imageUrl = `${baseUrl}/uploads/${fileId}-processed.png`;
-    const thumbnailUrl = `${baseUrl}/uploads/${fileId}-processed.png`;
+    // Generate presigned URL for the uploaded image
+    const imageUrl = await s3Storage.generatePresignedUrl({
+      key: key,
+      expireTime: 86400 * 30, // 30 days
+    });
 
     res.json({
       success: true,
       data: {
         id: fileId,
         imageUrl,
-        thumbnailUrl
+        thumbnailUrl: imageUrl
       }
     });
   } catch (error) {
@@ -373,27 +385,6 @@ app.delete('/api/v1/outfits/:id', (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: 'Failed to delete outfit' });
   }
 });
-
-// Serve uploaded files (for demo - in production use CDN/object storage)
-// Support CORS and proper URL generation for preview environments
-app.use('/uploads', (req, res, next) => {
-  // Set CORS headers for image requests
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  next();
-}, express.static(uploadDir));
-
-// Get public URL for this server
-const getPublicUrl = (req: Request): string => {
-  // Check for forwarded headers (for reverse proxy / preview environments)
-  const forwarded = req.headers['x-forwarded-host'] as string;
-  const host = forwarded || req.headers.host;
-  const protocol = req.headers['x-forwarded-proto'] || 'http';
-  
-  if (typeof host === 'string') {
-    return `${protocol}://${host}`;
-  }
-  return `http://localhost:${port}`;
-};
 
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: any) => {
