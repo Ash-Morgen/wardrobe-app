@@ -78,8 +78,10 @@ const sampleClothing: Omit<Clothing, 'id'>[] = [
 
 // Load sample data into store
 sampleClothing.forEach((item) => {
-  clothingStore.set(uuidv4(), item as Clothing);
+  const id = uuidv4();
+  clothingStore.set(id, { ...item, id } as Clothing);
 });
+console.log('Loaded', clothingStore.size, 'sample clothing items');
 
 // Helper function to remove background based on corner color detection
 async function removeBackgroundByColor(buffer: Buffer): Promise<Buffer> {
@@ -412,14 +414,21 @@ app.post('/api/v1/outfits', (req: Request, res: Response) => {
       return;
     }
 
+    // Map items to include full clothing info
+    const itemsWithClothing = items.map((item) => {
+      const clothing = clothingStore.get(item.clothingId);
+      return {
+        clothingId: item.clothingId,
+        position: item.position || { x: 0, y: 0 },
+        clothing: clothing || null // Include full clothing object for resilience
+      };
+    });
+
     const outfit: Outfit = {
       id: uuidv4(),
       name,
       description,
-      items: items.map((item) => ({
-        clothingId: item.clothingId,
-        position: item.position || { x: 0, y: 0 }
-      })),
+      items: itemsWithClothing,
       createdAt: new Date().toISOString()
     };
 
@@ -435,9 +444,10 @@ app.post('/api/v1/outfits', (req: Request, res: Response) => {
 app.get('/api/v1/outfits', (req: Request, res: Response) => {
   try {
     const outfits = Array.from(outfitStore.values()).map(outfit => {
-      // Attach clothing details to each outfit item
+      // Attach clothing details to each outfit item (prioritize stored data, fallback to store lookup)
       const itemsWithDetails = outfit.items.map(item => {
-        const clothing = clothingStore.get(item.clothingId);
+        // First try stored clothing object, then fallback to store lookup
+        const clothing = item.clothing || clothingStore.get(item.clothingId);
         return {
           ...item,
           clothing: clothing || null
@@ -470,9 +480,9 @@ app.get('/api/v1/outfits/:id', (req: Request, res: Response) => {
       return;
     }
 
-    // Attach clothing details
+    // Attach clothing details (prioritize stored data, fallback to store lookup)
     const itemsWithDetails = outfit.items.map(item => {
-      const clothing = clothingStore.get(item.clothingId);
+      const clothing = item.clothing || clothingStore.get(item.clothingId);
       return {
         ...item,
         clothing: clothing || null
