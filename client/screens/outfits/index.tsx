@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Image as ExpoImage } from 'expo-image';
 import Toast from 'react-native-toast-message';
-import { outfitApi, clothingApi, Outfit, Clothing } from '@/utils/api';
+import { outfitApi, clothingApi, Outfit, Clothing, buildAssetUrl } from '@/utils/api';
 
 export default function OutfitScreen() {
   const [outfits, setOutfits] = useState<Outfit[]>([]);
@@ -25,6 +25,7 @@ export default function OutfitScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showSelectModal, setShowSelectModal] = useState(false);
+  const [editingOutfit, setEditingOutfit] = useState<Outfit | null>(null);
   const [outfitName, setOutfitName] = useState('');
   const [outfitDescription, setOutfitDescription] = useState('');
   const [selectedItems, setSelectedItems] = useState<{ clothingId: string; position: { x: number; y: number } }[]>([]);
@@ -87,18 +88,7 @@ export default function OutfitScreen() {
     }
   };
 
-  // Edit outfit state
-  const [editingOutfit, setEditingOutfit] = useState<any>(null);
-
-  const handleEditOutfit = (outfit: any) => {
-    setEditingOutfit(outfit);
-    setOutfitName(outfit.name);
-    setOutfitDescription(outfit.description || '');
-    setSelectedItems(outfit.items || []);
-    setShowCreateModal(true);
-  };
-
-  const handleSaveOutfit = async () => {
+const handleSaveOutfit = async () => {
     if (!outfitName.trim()) {
       Toast.show({ type: 'error', text1: '请输入搭配名称' });
       return;
@@ -110,13 +100,14 @@ export default function OutfitScreen() {
 
     setIsSaving(true);
     try {
+      console.log('Saving outfit:', { editingOutfit: !!editingOutfit, outfitName, selectedItems });
       if (editingOutfit) {
         // Update existing outfit
-        await outfitApi.update(editingOutfit.id, {
+        const result = await outfitApi.update(editingOutfit.id, {
           name: outfitName.trim(),
-          description: outfitDescription.trim(),
           items: selectedItems,
         });
+        console.log('Update result:', result);
         Toast.show({ type: 'success', text1: '搭配更新成功' });
       } else {
         // Create new outfit
@@ -129,9 +120,42 @@ export default function OutfitScreen() {
       }
       setShowCreateModal(false);
       fetchOutfits();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save outfit:', error);
-      Toast.show({ type: 'error', text1: '创建失败' });
+      Toast.show({ type: 'error', text1: '保存失败', text2: error?.message || '请重试' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // 处理编辑套装保存
+  const handleSaveEdit = async () => {
+    if (!editingOutfit) return;
+    
+    if (!editingOutfit.name?.trim()) {
+      Toast.show({ type: 'error', text1: '请输入套装名称' });
+      return;
+    }
+    if (selectedItems.length === 0) {
+      Toast.show({ type: 'error', text1: '请至少选择一件衣服' });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      console.log('Updating outfit:', editingOutfit.id, { name: editingOutfit.name.trim(), items: selectedItems });
+      const result = await outfitApi.update(editingOutfit.id, {
+        name: editingOutfit.name.trim(),
+        items: selectedItems,
+      });
+      console.log('Update result:', result);
+      Toast.show({ type: 'success', text1: '套装更新成功' });
+      setEditingOutfit(null);
+      setSelectedItems([]);
+      fetchOutfits();
+    } catch (error: any) {
+      console.error('Failed to update outfit:', error);
+      Toast.show({ type: 'error', text1: '保存失败', text2: error?.message || '请重试' });
     } finally {
       setIsSaving(false);
     }
@@ -154,6 +178,12 @@ export default function OutfitScreen() {
         },
       },
     ]);
+  };
+
+  const handleEditOutfit = (outfit: Outfit) => {
+    console.log('Editing outfit:', outfit);
+    setEditingOutfit(outfit);
+    setSelectedItems(outfit.items || []);
   };
 
   const getClothingById = (id: string) => {
@@ -386,6 +416,93 @@ export default function OutfitScreen() {
           </ScrollView>
         </SafeAreaView>
       </Modal>
+
+      {/* Edit Outfit Modal */}
+      <Modal
+        visible={!!editingOutfit}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setEditingOutfit(null)}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+            <View style={styles.editModalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>编辑套装</Text>
+                <TouchableOpacity onPress={() => setEditingOutfit(null)}>
+                  <Text style={styles.closeButton}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView style={styles.modalBody}>
+                <Text style={styles.inputLabel}>套装名称</Text>
+                <TextInput
+                  style={styles.nameInput}
+                  value={editingOutfit?.name || ''}
+                  onChangeText={(text) => editingOutfit && setEditingOutfit({ ...editingOutfit, name: text })}
+                  placeholder="输入套装名称"
+                />
+
+                <View style={styles.selectedHeader}>
+                  <Text style={styles.inputLabel}>已选衣服 ({selectedItems.length})</Text>
+                  <TouchableOpacity onPress={() => setShowSelectModal(true)}>
+                    <Text style={styles.addButton}>+ 添加衣服</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {selectedItems.length === 0 ? (
+                  <Text style={styles.emptySelectionText}>未选择衣服，请添加衣服</Text>
+                ) : (
+                  <View style={styles.selectedGrid}>
+                    {selectedItems.map((item, index) => {
+                      const clothing = clothingList.find((c: any) => c.id === item.clothingId);
+                      return (
+                        <View key={item.clothingId || index} style={styles.selectedItem}>
+                          {clothing?.thumbnailUrl || clothing?.imageUrl ? (
+                            <Image
+                              source={{ uri: buildAssetUrl(clothing.thumbnailUrl || clothing.imageUrl) }}
+                              style={styles.selectedImage}
+                            />
+                          ) : (
+                            <View style={styles.selectedPlaceholder} />
+                          )}
+                          <TouchableOpacity
+                            style={styles.removeButton}
+                            onPress={() => {
+                              const newItems = selectedItems.filter((_, i) => i !== index);
+                              setSelectedItems(newItems);
+                              if (editingOutfit) {
+                                setEditingOutfit({ ...editingOutfit, items: newItems });
+                              }
+                            }}
+                          >
+                            <Text style={styles.removeButtonText}>✕</Text>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+              </ScrollView>
+
+              <View style={styles.editFooter}>
+                <TouchableOpacity
+                  style={styles.editCancelButton}
+                  onPress={() => setEditingOutfit(null)}
+                >
+                  <Text style={styles.editCancelButtonText}>取消</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.editSaveButton}
+                  onPress={handleSaveEdit}
+                >
+                  <Text style={styles.editSaveButtonText}>保存</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -468,6 +585,66 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#8A8A8A',
     marginBottom: 12,
+  },
+  editModalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '90%',
+  },
+  nameInput: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 15,
+    color: '#3D3D3D',
+    borderWidth: 1,
+    borderColor: '#F0EDE8',
+  },
+  selectedHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    marginTop: 16,
+  },
+  selectedGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  selectedItem: {
+    width: 80,
+    alignItems: 'center',
+  },
+  selectedImage: {
+    width: 72,
+    height: 72,
+    borderRadius: 12,
+    backgroundColor: '#F5F0EB',
+  },
+  selectedPlaceholder: {
+    width: 72,
+    height: 72,
+    borderRadius: 12,
+    backgroundColor: '#F5F0EB',
+  },
+  removeButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#FF4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  removeButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   outfitPreview: {
     flexDirection: 'row',
@@ -655,5 +832,100 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#8A8A8A',
     marginTop: 4,
+  },
+  editModalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  editModalContent: {
+    width: '90%',
+    maxHeight: '80%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  editModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E8E2DC',
+  },
+  editModalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#3D3D3D',
+  },
+  closeButton: {
+    padding: 8,
+  },
+  closeButtonText: {
+    fontSize: 24,
+    color: '#8A8A8A',
+  },
+  editModalBody: {
+    padding: 20,
+    maxHeight: 400,
+  },
+  editInputContainer: {
+    marginBottom: 20,
+  },
+  editLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#3D3D3D',
+    marginBottom: 8,
+  },
+  editInput: {
+    backgroundColor: '#F8F5F1',
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+    color: '#3D3D3D',
+  },
+  editModalFooter: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E8E2DC',
+  },
+  editCancelButton: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    backgroundColor: '#F5F0EB',
+    borderRadius: 12,
+    marginRight: 12,
+    alignItems: 'center',
+  },
+  editCancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#8A8A8A',
+  },
+  editSaveButton: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    backgroundColor: '#4A7C59',
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  editSaveButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  editFooter: {
+    flexDirection: 'row',
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F0EDE8',
+    backgroundColor: '#FFFFFF',
   },
 });

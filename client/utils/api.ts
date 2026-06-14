@@ -187,6 +187,17 @@ export const outfitApi = {
     return data.data;
   },
 
+  update: async (id: string, outfit: { name?: string; items?: OutfitItem[] }): Promise<Outfit> => {
+    const res = await fetch(`${API_URL}/api/v1/outfits/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(outfit),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    return data.data;
+  },
+
   delete: async (id: string): Promise<void> => {
     const res = await fetch(`${API_URL}/api/v1/outfits/${id}`, {
       method: 'DELETE',

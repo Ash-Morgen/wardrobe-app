@@ -51,6 +51,7 @@ interface Outfit {
   items: OutfitItem[];
   coverImageUrl?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 interface OutfitItem {
@@ -443,8 +444,8 @@ app.post('/api/v1/outfits', (req: Request, res: Response) => {
 // Update outfit
 app.put('/api/v1/outfits/:id', (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const { name, description } = req.body;
+    const id = String(req.params.id);
+    const { name, description, items } = req.body;
 
     const outfit = outfitStore.get(id);
     if (!outfit) {
@@ -455,6 +456,7 @@ app.put('/api/v1/outfits/:id', (req: Request, res: Response) => {
     // Update outfit data
     if (name) outfit.name = name;
     if (description !== undefined) outfit.description = description;
+    if (items !== undefined) outfit.items = items;
     outfit.updatedAt = new Date().toISOString();
 
     outfitStore.set(id, outfit);
@@ -469,10 +471,9 @@ app.put('/api/v1/outfits/:id', (req: Request, res: Response) => {
 app.get('/api/v1/outfits', (req: Request, res: Response) => {
   try {
     const outfits = Array.from(outfitStore.values()).map(outfit => {
-      // Attach clothing details to each outfit item (prioritize stored data, fallback to store lookup)
+      // Attach clothing details to each outfit item
       const itemsWithDetails = outfit.items.map(item => {
-        // First try stored clothing object, then fallback to store lookup
-        const clothing = item.clothing || clothingStore.get(item.clothingId);
+        const clothing = clothingStore.get(item.clothingId);
         return {
           ...item,
           clothing: clothing || null
@@ -505,9 +506,9 @@ app.get('/api/v1/outfits/:id', (req: Request, res: Response) => {
       return;
     }
 
-    // Attach clothing details (prioritize stored data, fallback to store lookup)
+    // Attach clothing details
     const itemsWithDetails = outfit.items.map(item => {
-      const clothing = item.clothing || clothingStore.get(item.clothingId);
+      const clothing = clothingStore.get(item.clothingId);
       return {
         ...item,
         clothing: clothing || null
