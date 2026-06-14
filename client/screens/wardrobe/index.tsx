@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image as ExpoImage } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
-import { clothingApi, Category, Clothing } from '@/utils/api';
+import { clothingApi, Category, Clothing, buildAssetUrl } from '@/utils/api';
 import { distributeItems, getOptimizedDimensions, MasonryItem } from '@/utils/masonry';
 import Toast from 'react-native-toast-message';
 
@@ -106,6 +106,10 @@ export default function WardrobeScreen() {
     }
   };
 
+  const handleEditPress = () => {
+    setEditModalVisible(true);
+  };
+
   const handleDelete = async () => {
     if (!selectedItem) return;
     Alert.alert('确认删除', '确定要删除这件衣服吗？', [
@@ -131,7 +135,7 @@ export default function WardrobeScreen() {
   const masonryData: MasonryItem[] = useMemo(() => {
     return clothingList.map((item) => ({
       id: item.id,
-      imageUrl: item.imageUrl,
+      imageUrl: buildAssetUrl(item.imageUrl),
       aspectRatio: 0.8 + Math.random() * 0.4,
       title: item.name,
       data: item,
@@ -263,7 +267,7 @@ export default function WardrobeScreen() {
             {selectedItem && (
               <ScrollView style={styles.modalBody}>
                 <ExpoImage
-                  source={{ uri: selectedItem.imageUrl }}
+                  source={{ uri: buildAssetUrl(selectedItem.imageUrl) }}
                   style={styles.modalImage}
                   contentFit="contain"
                 />
@@ -287,9 +291,66 @@ export default function WardrobeScreen() {
             )}
 
             <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.actionButton} onPress={handleEditPress}>
+                <Ionicons name="create-outline" size={20} color="#4F46E5" />
+                <Text style={styles.actionButtonText}>编辑</Text>
+              </TouchableOpacity>
               <TouchableOpacity style={styles.actionButton} onPress={handleDelete}>
                 <Ionicons name="trash-outline" size={20} color="#ff4444" />
                 <Text style={styles.actionButtonTextDanger}>删除</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal
+        visible={editModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>编辑衣服</Text>
+              <TouchableOpacity onPress={() => setEditModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              <Text style={styles.inputLabel}>名称</Text>
+              <TextInput
+                style={styles.input}
+                value={editName}
+                onChangeText={setEditName}
+                placeholder="请输入衣服名称"
+                placeholderTextColor="#8A8A8A"
+              />
+              <Text style={styles.inputLabel}>子类</Text>
+              <TextInput
+                style={styles.input}
+                value={editSubcategory}
+                onChangeText={setEditSubcategory}
+                placeholder="请输入子类（如：T恤、衬衫）"
+                placeholderTextColor="#8A8A8A"
+              />
+            </ScrollView>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: '#F0F0F0' }]}
+                onPress={() => setEditModalVisible(false)}
+              >
+                <Text style={styles.actionButtonText}>取消</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: '#8B7355' }]}
+                onPress={handleSaveEdit}
+              >
+                <Text style={[styles.actionButtonText, { color: '#FFF' }]}>保存</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -484,10 +545,28 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: '#FFF5F5',
   },
+  actionButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4F46E5',
+  },
   actionButtonTextDanger: {
     fontSize: 14,
     fontWeight: '600',
     color: '#ff4444',
+  },
+  inputLabel: {
+    fontSize: 14,
+    color: '#8A8A8A',
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: '#F5F0EB',
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 14,
+    color: '#3D3D3D',
+    marginBottom: 16,
   },
   floatingButton: {
     position: 'absolute',

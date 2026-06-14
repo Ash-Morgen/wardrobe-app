@@ -102,8 +102,8 @@ app.post('/api/v1/clothing/upload', upload.single('file'), async (req: Request, 
 
     await sharp(processedBuffer).toFile(processedPath);
 
-    // Generate URLs (in production, upload to object storage)
-    const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
+    // Generate URLs - use public URL format for preview environment
+    const baseUrl = getPublicUrl(req);
     const imageUrl = `${baseUrl}/uploads/${fileId}-processed.png`;
     const thumbnailUrl = `${baseUrl}/uploads/${fileId}-processed.png`;
 
@@ -355,7 +355,25 @@ app.delete('/api/v1/outfits/:id', (req: Request, res: Response) => {
 });
 
 // Serve uploaded files (for demo - in production use CDN/object storage)
-app.use('/uploads', express.static(uploadDir));
+// Support CORS and proper URL generation for preview environments
+app.use('/uploads', (req, res, next) => {
+  // Set CORS headers for image requests
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  next();
+}, express.static(uploadDir));
+
+// Get public URL for this server
+const getPublicUrl = (req: Request): string => {
+  // Check for forwarded headers (for reverse proxy / preview environments)
+  const forwarded = req.headers['x-forwarded-host'] as string;
+  const host = forwarded || req.headers.host;
+  const protocol = req.headers['x-forwarded-proto'] || 'http';
+  
+  if (typeof host === 'string') {
+    return `${protocol}://${host}`;
+  }
+  return `http://localhost:${port}`;
+};
 
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: any) => {
