@@ -33,6 +33,7 @@ export default function AddClothingScreen() {
   const router = useSafeRouter();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
+  const [galleryPermission, requestGalleryPermission] = ImagePicker.useMediaLibraryPermissions();
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -75,6 +76,13 @@ export default function AddClothingScreen() {
   };
 
   const pickFromGallery = async () => {
+    // Request gallery permission first
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Toast.show({ type: 'error', text1: '需要相册权限才能选择照片' });
+      return;
+    }
+    
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: false,
