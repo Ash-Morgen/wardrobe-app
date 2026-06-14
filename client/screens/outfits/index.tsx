@@ -590,7 +590,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: '90%',
+    flex: 1,
+    maxHeight: '95%',
   },
   nameInput: {
     backgroundColor: '#FFFFFF',
@@ -839,13 +840,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  editModalContent: {
-    width: '90%',
-    maxHeight: '80%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
   editModalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -854,45 +848,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E8E2DC',
   },
-  editModalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#3D3D3D',
-  },
   closeButton: {
     padding: 8,
   },
   closeButtonText: {
     fontSize: 24,
     color: '#8A8A8A',
-  },
-  editModalBody: {
-    padding: 20,
-    maxHeight: 400,
-  },
-  editInputContainer: {
-    marginBottom: 20,
-  },
-  editLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#3D3D3D',
-    marginBottom: 8,
-  },
-  editInput: {
-    backgroundColor: '#F8F5F1',
-    borderRadius: 12,
-    padding: 14,
-    fontSize: 16,
-    color: '#3D3D3D',
-  },
-  editModalFooter: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 12,
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#E8E2DC',
   },
   editCancelButton: {
     flex: 1,
