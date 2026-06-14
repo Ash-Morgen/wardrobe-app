@@ -440,6 +440,31 @@ app.post('/api/v1/outfits', (req: Request, res: Response) => {
   }
 });
 
+// Update outfit
+app.put('/api/v1/outfits/:id', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, description } = req.body;
+
+    const outfit = outfitStore.get(id);
+    if (!outfit) {
+      res.status(404).json({ success: false, error: 'Outfit not found' });
+      return;
+    }
+
+    // Update outfit data
+    if (name) outfit.name = name;
+    if (description !== undefined) outfit.description = description;
+    outfit.updatedAt = new Date().toISOString();
+
+    outfitStore.set(id, outfit);
+    res.json({ success: true, data: outfit });
+  } catch (error) {
+    console.error('Update outfit error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update outfit' });
+  }
+});
+
 // Get all outfits
 app.get('/api/v1/outfits', (req: Request, res: Response) => {
   try {

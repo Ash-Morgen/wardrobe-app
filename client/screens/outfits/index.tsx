@@ -87,6 +87,17 @@ export default function OutfitScreen() {
     }
   };
 
+  // Edit outfit state
+  const [editingOutfit, setEditingOutfit] = useState<any>(null);
+
+  const handleEditOutfit = (outfit: any) => {
+    setEditingOutfit(outfit);
+    setOutfitName(outfit.name);
+    setOutfitDescription(outfit.description || '');
+    setSelectedItems(outfit.items || []);
+    setShowCreateModal(true);
+  };
+
   const handleSaveOutfit = async () => {
     if (!outfitName.trim()) {
       Toast.show({ type: 'error', text1: '请输入搭配名称' });
@@ -99,12 +110,23 @@ export default function OutfitScreen() {
 
     setIsSaving(true);
     try {
-      await outfitApi.create({
-        name: outfitName.trim(),
-        description: outfitDescription.trim(),
-        items: selectedItems,
-      });
-      Toast.show({ type: 'success', text1: '搭配创建成功' });
+      if (editingOutfit) {
+        // Update existing outfit
+        await outfitApi.update(editingOutfit.id, {
+          name: outfitName.trim(),
+          description: outfitDescription.trim(),
+          items: selectedItems,
+        });
+        Toast.show({ type: 'success', text1: '搭配更新成功' });
+      } else {
+        // Create new outfit
+        await outfitApi.create({
+          name: outfitName.trim(),
+          description: outfitDescription.trim(),
+          items: selectedItems,
+        });
+        Toast.show({ type: 'success', text1: '搭配创建成功' });
+      }
       setShowCreateModal(false);
       fetchOutfits();
     } catch (error) {
@@ -187,9 +209,14 @@ export default function OutfitScreen() {
             <View key={outfit.id} style={styles.outfitCard}>
               <View style={styles.outfitHeader}>
                 <Text style={styles.outfitName}>{outfit.name}</Text>
-                <TouchableOpacity onPress={() => handleDeleteOutfit(outfit.id)}>
-                  <Ionicons name="trash-outline" size={20} color="#ff4444" />
-                </TouchableOpacity>
+                <View style={styles.outfitActions}>
+                  <TouchableOpacity onPress={() => handleEditOutfit(outfit)} style={styles.actionButton}>
+                    <Ionicons name="pencil" size={20} color="#666" />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleDeleteOutfit(outfit.id)} style={styles.actionButton}>
+                    <Ionicons name="trash-outline" size={20} color="#ff4444" />
+                  </TouchableOpacity>
+                </View>
               </View>
               {outfit.description && (
                 <Text style={styles.outfitDescription}>{outfit.description}</Text>
@@ -426,6 +453,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#3D3D3D',
+    flex: 1,
+  },
+  outfitActions: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  actionButton: {
+    padding: 6,
+    borderRadius: 6,
+    backgroundColor: '#F0F0F3',
   },
   outfitDescription: {
     fontSize: 14,
