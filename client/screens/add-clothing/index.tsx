@@ -18,7 +18,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { Image as ExpoImage } from 'expo-image';
 import Toast from 'react-native-toast-message';
-import { clothingApi, Category, createFormDataFile, API_URL } from '@/utils/api';
+import { clothingApi, Category } from '@/utils/api';
 
 const CATEGORY_OPTIONS = [
   { id: 'tops', name: '上衣' },
@@ -137,25 +137,13 @@ export default function AddClothingScreen() {
     setIsSaving(true);
     try {
       const name = clothingName.trim() || `${CATEGORY_OPTIONS.find(c => c.id === selectedCategory)?.name || '衣服'}_${Date.now()}`;
-      
-      // Create form data with image file
-      const formData = await createFormDataFile(processedImage, `clothing_${Date.now()}.png`, 'image/png');
-      const body = new FormData();
-      body.append('file', formData as any);
-      body.append('name', name);
-      body.append('category', selectedCategory);
-      if (selectedSubcategory) {
-        body.append('subcategory', selectedSubcategory);
-      }
-      
-      // Upload to server
-      const res = await fetch(`${API_URL}/api/v1/clothing/upload`, {
-        method: 'POST',
-        body,
+      await clothingApi.create({
+        name,
+        category: selectedCategory,
+        subcategory: selectedSubcategory,
+        imageUrl: processedImage,
+        thumbnailUrl: processedImage,
       });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error);
-      
       Toast.show({ type: 'success', text1: '添加成功' });
       resetCapture();
       router.back();
