@@ -197,73 +197,32 @@ app.get('/api/v1/categories', (req: Request, res: Response) => {
   res.json({ success: true, data: CATEGORIES });
 });
 
-// Upload and process clothing image (with automatic background removal)
-app.post('/api/v1/clothing/upload', upload.single('file'), async (req: Request, res: Response) => {
+// Upload and process clothing image (store base64 locally)
+// 前端已将图片转为 base64，直接存储
+app.post('/api/v1/clothing/upload', (req: Request, res: Response) => {
   try {
-    if (!req.file) {
-      res.status(400).json({ success: false, error: 'No file uploaded' });
+    const { imageData } = req.body as { imageData?: string };
+
+    if (!imageData) {
+      res.status(400).json({ success: false, error: 'No image data provided' });
       return;
     }
 
     const fileId = uuidv4();
-    const fileBuffer = req.file.buffer;
-    const contentType = req.file.mimetype || 'image/png';
-    const ext = 'png'; // Output as PNG for transparency support
 
-    console.log('Starting background removal for image:', fileId);
-
-    // Step 1: Remove background based on corner color detection
-    let processedBuffer: Buffer;
-    try {
-      processedBuffer = await removeBackgroundByColor(fileBuffer);
-      console.log('Background removed successfully, size:', processedBuffer.length);
-    } catch (bgRemovalError) {
-      console.warn('Background removal failed, using original image:', bgRemovalError);
-      // Fallback: use original image if background removal fails
-      processedBuffer = fileBuffer;
+    // 直接存储 base64 数据，不上传到 S3
+    // 前端会处理图片大小，这里只做验证
+    if (imageData.length > 10 * 1024 * 1024) { // 10MB limit
+      res.status(400).json({ success: false, error: 'Image too large' });
+      return;
     }
-
-    // Step 2: Resize the processed image (ensure alpha channel is preserved)
-    let uploadBuffer = processedBuffer;
-    try {
-      const processedMeta = await sharp(processedBuffer).metadata();
-      // Only resize if the image is larger than 800x800
-      if (processedMeta.width && processedMeta.height && 
-          (processedMeta.width > 800 || processedMeta.height > 800)) {
-        uploadBuffer = await sharp(processedBuffer)
-          .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
-          .png({ compressionLevel: 9 })
-          .toBuffer();
-      } else {
-        // Just ensure it's PNG format without extra processing
-        uploadBuffer = await sharp(processedBuffer)
-          .png({ compressionLevel: 9 })
-          .toBuffer();
-      }
-    } catch (sharpError) {
-      console.warn('Sharp processing failed, using processed image:', sharpError);
-      uploadBuffer = processedBuffer;
-    }
-
-    // Step 3: Upload to S3 storage
-    const key = await s3Storage.uploadFile({
-      fileContent: uploadBuffer,
-      fileName: `clothing/${fileId}.${ext}`,
-      contentType: 'image/png',
-    });
-
-    // Step 4: Generate presigned URL for the uploaded image
-    const imageUrl = await s3Storage.generatePresignedUrl({
-      key: key,
-      expireTime: 86400 * 30, // 30 days
-    });
 
     res.json({
       success: true,
       data: {
         id: fileId,
-        imageUrl,
-        thumbnailUrl: imageUrl
+        imageUrl: imageData, // 直接返回 base64 数据
+        thumbnailUrl: imageData
       }
     });
   } catch (error) {

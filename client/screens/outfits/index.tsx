@@ -778,10 +778,6 @@ const styles = StyleSheet.create({
   selectedItems: {
     flexDirection: 'row',
   },
-  selectedItem: {
-    marginRight: 12,
-    position: 'relative',
-  },
   selectedItemImage: {
     width: 80,
     height: 80,

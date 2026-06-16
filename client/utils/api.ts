@@ -28,6 +28,12 @@ export async function createFormDataFile(
 export const buildAssetUrl = (url?: string | null): string | undefined => {
   if (!url) return undefined;
   
+  // 如果是 data URI（base64），直接返回
+  if (url.startsWith('data:')) return url;
+  
+  // 如果是本地文件 URI（file://），直接返回
+  if (url.startsWith('file://')) return url;
+  
   // 如果是 localhost URL，替换为 API_BASE
   if (/^https?:\/\/localhost(:\d+)?\//i.test(url)) {
     return url.replace(/^https?:\/\/localhost(:\d+)?/i, API_BASE);

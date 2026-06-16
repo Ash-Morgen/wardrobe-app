@@ -19,6 +19,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Image as ExpoImage } from 'expo-image';
 import Toast from 'react-native-toast-message';
 import { clothingApi, Category } from '@/utils/api';
+import * as FileSystem from 'expo-file-system/legacy';
 
 const CATEGORY_OPTIONS = [
   { id: 'tops', name: '上衣' },
@@ -98,12 +99,17 @@ export default function AddClothingScreen() {
   const processImage = async (uri: string) => {
     setIsProcessing(true);
     try {
-      const result = await clothingApi.upload(uri);
-      setProcessedImage(result.imageUrl);
+      // 读取图片为 base64
+      const base64 = await (FileSystem as any).readAsStringAsync(uri, {
+        encoding: (FileSystem as any).EncodingType.Base64,
+      });
+      
+      // 返回带前缀的 base64 数据（后端会存储这个）
+      const imageData = `data:image/jpeg;base64,${base64}`;
+      setProcessedImage(imageData);
     } catch (error) {
       console.error('Failed to process image:', error);
       Toast.show({ type: 'error', text1: '图片处理失败' });
-      // Fallback: use original image
       setProcessedImage(uri);
     } finally {
       setIsProcessing(false);
@@ -141,8 +147,8 @@ export default function AddClothingScreen() {
         name,
         category: selectedCategory,
         subcategory: selectedSubcategory,
-        imageUrl: processedImage,
-        thumbnailUrl: processedImage,
+        imageUrl: processedImage, // 本地路径
+        thumbnailUrl: processedImage, // 本地路径
       });
       Toast.show({ type: 'success', text1: '添加成功' });
       resetCapture();
