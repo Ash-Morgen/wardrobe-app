@@ -23,6 +23,7 @@ export default function RootLayout() {
       >
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="add-clothing" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="settings" options={{ animation: 'slide_from_right' }} />
       </Stack>
       <Toast />
     </Provider>

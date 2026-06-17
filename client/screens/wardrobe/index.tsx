@@ -161,7 +161,15 @@ export default function WardrobeScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>我的衣橱</Text>
-        <Text style={styles.headerCount}>{clothingList.length} 件单品</Text>
+        <View style={styles.headerActions}>
+          <Text style={styles.headerCount}>{clothingList.length} 件单品</Text>
+          <TouchableOpacity
+            style={styles.settingsButton}
+            onPress={() => router.push('/settings')}
+          >
+            <Ionicons name="settings-outline" size={24} color="#666" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Category Tabs */}
@@ -382,7 +390,14 @@ const styles = StyleSheet.create({
   headerCount: {
     fontSize: 14,
     color: '#8A8A8A',
-    marginTop: 4,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  settingsButton: {
+    padding: 4,
   },
   categoryContainer: {
     borderBottomWidth: 1,
