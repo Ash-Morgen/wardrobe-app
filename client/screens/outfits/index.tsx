@@ -30,6 +30,17 @@ export default function OutfitScreen() {
   const [outfitDescription, setOutfitDescription] = useState('');
   const [selectedItems, setSelectedItems] = useState<{ clothingId: string; position: { x: number; y: number } }[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [selectFilterCategory, setSelectFilterCategory] = useState<string>('all');
+
+  const CATEGORIES = [
+    { id: 'all', name: '全部' },
+    { id: 'tops', name: '上衣' },
+    { id: 'bottoms', name: '裤子' },
+    { id: 'outerwear', name: '外套' },
+    { id: 'dresses', name: '裙子' },
+    { id: 'bags', name: '包包' },
+    { id: 'accessories', name: '配饰' },
+  ];
 
   const fetchOutfits = useCallback(async () => {
     try {
@@ -64,6 +75,11 @@ export default function OutfitScreen() {
     await Promise.all([fetchOutfits(), fetchClothing()]);
     setRefreshing(false);
   }, [fetchOutfits, fetchClothing]);
+
+  // Filter clothing by category for selection
+  const filteredClothing = selectFilterCategory === 'all'
+    ? clothingList
+    : clothingList.filter(c => c.category === selectFilterCategory);
 
   const handleCreateOutfit = () => {
     setOutfitName('');
@@ -375,14 +391,30 @@ const handleSaveOutfit = async () => {
             </TouchableOpacity>
           </View>
 
+          <View style={styles.filterTabsContainer}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterTabsContent}>
+              {CATEGORIES.map((cat) => (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={[styles.filterTab, selectFilterCategory === cat.id && styles.filterTabActive]}
+                  onPress={() => setSelectFilterCategory(cat.id)}
+                >
+                  <Text style={[styles.filterTabText, selectFilterCategory === cat.id && styles.filterTabTextActive]}>
+                    {cat.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
           <ScrollView style={styles.modalBody}>
-            {clothingList.length === 0 ? (
+            {filteredClothing.length === 0 ? (
               <View style={styles.emptySelection}>
-                <Text style={styles.emptySelectionText}>衣橱中还没有衣服</Text>
+                <Text style={styles.emptySelectionText}>该分类下还没有衣服</Text>
               </View>
             ) : (
               <View style={styles.clothingGrid}>
-                {clothingList.map((clothing) => {
+                {filteredClothing.map((clothing) => {
                   const isSelected = selectedItems.some(item => item.clothingId === clothing.id);
                   return (
                     <TouchableOpacity
@@ -453,34 +485,49 @@ const handleSaveOutfit = async () => {
                 {selectedItems.length === 0 ? (
                   <Text style={styles.emptySelectionText}>未选择衣服，请添加衣服</Text>
                 ) : (
-                  <View style={styles.selectedGrid}>
-                    {selectedItems.map((item, index) => {
-                      const clothing = clothingList.find((c: any) => c.id === item.clothingId);
-                      return (
-                        <View key={item.clothingId || index} style={styles.selectedItem}>
-                          {clothing?.thumbnailUrl || clothing?.imageUrl ? (
-                            <Image
-                              source={{ uri: buildAssetUrl(clothing.thumbnailUrl || clothing.imageUrl) }}
-                              style={styles.selectedImage}
-                            />
-                          ) : (
-                            <View style={styles.selectedPlaceholder} />
-                          )}
-                          <TouchableOpacity
-                            style={styles.removeButton}
-                            onPress={() => {
-                              const newItems = selectedItems.filter((_, i) => i !== index);
-                              setSelectedItems(newItems);
-                              if (editingOutfit) {
-                                setEditingOutfit({ ...editingOutfit, items: newItems });
-                              }
-                            }}
-                          >
-                            <Text style={styles.removeButtonText}>✕</Text>
-                          </TouchableOpacity>
-                        </View>
-                      );
-                    })}
+                  <View style={styles.selectedPreviewContainer}>
+                    {/* 水平滚动预览 */}
+                    <ScrollView 
+                      horizontal 
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.selectedPreviewContent}
+                    >
+                      {selectedItems.map((item, index) => {
+                        const clothing = clothingList.find((c: any) => c.id === item.clothingId);
+                        const categoryName = clothing ? getCategoryName(clothing.category) : '';
+                        return (
+                          <View key={item.clothingId || index} style={styles.selectedPreviewItem}>
+                            {clothing?.thumbnailUrl || clothing?.imageUrl ? (
+                              <ExpoImage
+                                source={{ uri: buildAssetUrl(clothing.thumbnailUrl || clothing.imageUrl) }}
+                                style={styles.selectedPreviewImage}
+                                contentFit="cover"
+                              />
+                            ) : (
+                              <View style={styles.selectedPreviewPlaceholder} />
+                            )}
+                            <Text style={styles.selectedPreviewName} numberOfLines={1}>
+                              {clothing?.name || '未知'}
+                            </Text>
+                            <Text style={styles.selectedPreviewCategory}>
+                              {categoryName}
+                            </Text>
+                            <TouchableOpacity
+                              style={styles.selectedPreviewRemove}
+                              onPress={() => {
+                                const newItems = selectedItems.filter((_, i) => i !== index);
+                                setSelectedItems(newItems);
+                                if (editingOutfit) {
+                                  setEditingOutfit({ ...editingOutfit, items: newItems });
+                                }
+                              }}
+                            >
+                              <Ionicons name="close-circle" size={22} color="#FF6B6B" />
+                            </TouchableOpacity>
+                          </View>
+                        );
+                      })}
+                    </ScrollView>
                   </View>
                 )}
               </ScrollView>
@@ -646,6 +693,55 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: 'bold',
+  },
+  // New improved preview styles
+  selectedPreviewContainer: {
+    marginVertical: 12,
+  },
+  selectedPreviewContent: {
+    paddingRight: 16,
+    gap: 12,
+  },
+  selectedPreviewItem: {
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 10,
+    width: 95,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  selectedPreviewImage: {
+    width: 75,
+    height: 75,
+    borderRadius: 10,
+    backgroundColor: '#F5F0EB',
+  },
+  selectedPreviewPlaceholder: {
+    width: 75,
+    height: 75,
+    borderRadius: 10,
+    backgroundColor: '#E8E2DC',
+  },
+  selectedPreviewName: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#3D3D3D',
+    marginTop: 6,
+    textAlign: 'center',
+    maxWidth: 75,
+  },
+  selectedPreviewCategory: {
+    fontSize: 9,
+    color: '#8A8A8A',
+    marginTop: 2,
+  },
+  selectedPreviewRemove: {
+    marginTop: 4,
+    padding: 2,
   },
   outfitPreview: {
     flexDirection: 'row',
@@ -829,6 +925,35 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#8A8A8A',
     marginTop: 4,
+  },
+  // Filter tabs for clothing selection
+  filterTabsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0EDE8',
+  },
+  filterTabsContent: {
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  filterTab: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F5F0EB',
+    marginHorizontal: 4,
+  },
+  filterTabActive: {
+    backgroundColor: '#4A7C59',
+  },
+  filterTabText: {
+    fontSize: 14,
+    color: '#666666',
+    fontWeight: '500',
+  },
+  filterTabTextActive: {
+    color: '#FFFFFF',
   },
   editModalContainer: {
     flex: 1,

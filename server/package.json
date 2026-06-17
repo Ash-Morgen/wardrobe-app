@@ -12,6 +12,7 @@
   "dependencies": {
     "@imgly/background-removal": "^1.7.0",
     "@supabase/supabase-js": "2.95.3",
+    "better-sqlite3": "^12.11.1",
     "cors": "^2.8.5",
     "coze-coding-dev-sdk": "^0.7.24",
     "dayjs": "^1.11.20",
@@ -26,6 +27,7 @@
     "zod": "^4.2.1"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/multer": "^2.0.0",
