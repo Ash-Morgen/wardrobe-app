@@ -10,7 +10,7 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts", "components/Screen.tsx"],
   "exclude": [
     "node_modules",
     "**/*.spec.ts",
@@ -19,6 +19,8 @@
     "**/*.test.tsx",
     "dist",
     "build",
-    ".expo"
+    ".expo",
+    "heroui",
+    "heroui/**"
   ]
 }

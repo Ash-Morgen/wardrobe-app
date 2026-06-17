@@ -25,8 +25,8 @@ export async function createFormDataFile(
  * 构建文件或图片完整的URL
  * 在预览环境下，需要将 localhost URL 替换为实际的 API 地址
  */
-export const buildAssetUrl = (url?: string | null): string | undefined => {
-  if (!url) return undefined;
+export const buildAssetUrl = (url?: string | null): string => {
+  if (!url) return '';
   
   // 如果是 data URI（base64），直接返回
   if (url.startsWith('data:')) return url;
@@ -35,8 +35,8 @@ export const buildAssetUrl = (url?: string | null): string | undefined => {
   if (url.startsWith('file://')) return url;
   
   // 如果是 localhost URL，替换为 API_BASE
-  if (/^https?:\/\/localhost(:\d+)?\//i.test(url)) {
-    return url.replace(/^https?:\/\/localhost(:\d+)?/i, API_BASE);
+  if (/^https?:\/\/localhost(?::\d+)?\//i.test(url)) {
+    return url.replace(/^https?:\/\/localhost(?::\d+)?/i, API_BASE);
   }
   
   // 如果是完整 URL，直接返回

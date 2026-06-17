@@ -102,6 +102,7 @@ const KeyboardAwareScrollable = ({
   const enhancedContentStyle = [{ ...merged, paddingBottom: currentPB + extraPadding }];
 
   // 基础配置 props，用于传递给 KeyboardAware 组件
+  // 注意：使用类型断言绕过第三方库的类型兼容性问题
   const commonProps = {
     ...childAttrs,
     contentContainerStyle: enhancedContentStyle,
@@ -115,7 +116,7 @@ const KeyboardAwareScrollable = ({
     ...(Platform.OS === 'ios'
       ? { contentInsetAdjustmentBehavior: childAttrs['contentInsetAdjustmentBehavior'] ?? contentInsetBehaviorIOS }
       : {}),
-  };
+  } as React.ComponentProps<typeof KeyboardAwareScrollView>;
 
   const t = (element as React.ReactElement).type;
 
@@ -126,10 +127,12 @@ const KeyboardAwareScrollable = ({
   }
 
   if (t === FlatList) {
+    // @ts-expect-error - 第三方库类型兼容性问题
     return <KeyboardAwareFlatList {...commonProps} />;
   }
 
   if (t === SectionList) {
+    // @ts-expect-error - 第三方库类型兼容性问题
     return <KeyboardAwareSectionList {...commonProps} />;
   }
 
