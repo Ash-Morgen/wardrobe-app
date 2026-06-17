@@ -390,7 +390,8 @@ app.post('/api/v1/outfits', (req: Request, res: Response) => {
 
     // Fetch with clothing details
     const savedOutfit = rowToOutfit(db.prepare('SELECT * FROM outfits WHERE id = ?').get(outfit.id) as any)!;
-    const itemsWithDetails = JSON.parse(savedOutfit.items).map((item: any) => ({
+    // savedOutfit.items is already parsed by rowToOutfit, no need to parse again
+    const itemsWithDetails = savedOutfit.items.map((item: any) => ({
       ...item,
       clothing: getClothingById(item.clothingId)
     }));
@@ -442,7 +443,8 @@ app.put('/api/v1/outfits/:id', (req: Request, res: Response) => {
     }
 
     const updatedOutfit = rowToOutfit(db.prepare('SELECT * FROM outfits WHERE id = ?').get(id) as any)!;
-    const itemsWithDetails = JSON.parse(updatedOutfit.items).map((item: any) => ({
+    // updatedOutfit.items is already parsed by rowToOutfit, no need to parse again
+    const itemsWithDetails = updatedOutfit.items.map((item: any) => ({
       ...item,
       clothing: getClothingById(item.clothingId)
     }));
