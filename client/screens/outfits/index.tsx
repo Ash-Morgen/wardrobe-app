@@ -347,27 +347,44 @@ const handleSaveOutfit = async () => {
                   <Text style={styles.emptySelectionText}>点击上方按钮添加衣服</Text>
                 </View>
               ) : (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.selectedItems}>
-                  {selectedItems.map((item, index) => {
-                    const clothing = getClothingById(item.clothingId);
-                    if (!clothing) return null;
-                    return (
-                      <View key={item.clothingId + index} style={styles.selectedItem}>
-                        <ExpoImage
-                          source={{ uri: clothing.imageUrl }}
-                          style={styles.selectedItemImage}
-                          contentFit="cover"
-                        />
-                        <TouchableOpacity
-                          style={styles.removeItem}
-                          onPress={() => toggleClothingSelection(item.clothingId)}
-                        >
-                          <Ionicons name="close-circle" size={20} color="#ff4444" />
-                        </TouchableOpacity>
-                      </View>
-                    );
-                  })}
-                </ScrollView>
+                <View style={styles.selectedPreviewContainer}>
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.selectedPreviewContent}
+                  >
+                    {selectedItems.map((item, index) => {
+                      const clothing = getClothingById(item.clothingId);
+                      if (!clothing) return null;
+                      const categoryName = getCategoryName(clothing.category);
+                      return (
+                        <View key={item.clothingId + index} style={styles.selectedPreviewItem}>
+                          {clothing?.thumbnailUrl || clothing?.imageUrl ? (
+                            <ExpoImage
+                              source={{ uri: buildAssetUrl(clothing.thumbnailUrl || clothing.imageUrl) }}
+                              style={styles.selectedPreviewImage}
+                              contentFit="cover"
+                            />
+                          ) : (
+                            <View style={styles.selectedPreviewPlaceholder} />
+                          )}
+                          <Text style={styles.selectedPreviewName} numberOfLines={1}>
+                            {clothing?.name}
+                          </Text>
+                          <Text style={styles.selectedPreviewCategory}>
+                            {categoryName}
+                          </Text>
+                          <TouchableOpacity
+                            style={styles.selectedPreviewRemove}
+                            onPress={() => toggleClothingSelection(item.clothingId)}
+                          >
+                            <Ionicons name="close-circle" size={22} color="#FF6B6B" />
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
               )}
             </View>
           </ScrollView>
@@ -494,7 +511,8 @@ const handleSaveOutfit = async () => {
                     >
                       {selectedItems.map((item, index) => {
                         const clothing = clothingList.find((c: any) => c.id === item.clothingId);
-                        const categoryName = clothing ? getCategoryName(clothing.category) : '';
+                        if (!clothing) return null;
+                        const categoryName = getCategoryName(clothing.category);
                         return (
                           <View key={item.clothingId || index} style={styles.selectedPreviewItem}>
                             {clothing?.thumbnailUrl || clothing?.imageUrl ? (
@@ -507,7 +525,7 @@ const handleSaveOutfit = async () => {
                               <View style={styles.selectedPreviewPlaceholder} />
                             )}
                             <Text style={styles.selectedPreviewName} numberOfLines={1}>
-                              {clothing?.name || '未知'}
+                              {clothing?.name}
                             </Text>
                             <Text style={styles.selectedPreviewCategory}>
                               {categoryName}
