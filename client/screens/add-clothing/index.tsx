@@ -14,12 +14,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { Ionicons } from '@expo/vector-icons';
-import { CameraView, useCameraPermissions } from 'expo-camera';
-import * as ImagePicker from 'expo-image-picker';
 import { Image as ExpoImage } from 'expo-image';
 import Toast from 'react-native-toast-message';
 import { clothingApi, Category } from '@/utils/api';
 import * as FileSystem from 'expo-file-system/legacy';
+import * as ImagePicker from 'expo-image-picker';
 
 const CATEGORY_OPTIONS = [
   { id: 'tops', name: '上衣' },
@@ -32,9 +31,7 @@ const CATEGORY_OPTIONS = [
 
 export default function AddClothingScreen() {
   const router = useSafeRouter();
-  const cameraRef = useRef<CameraView>(null);
-  const [permission, requestPermission] = useCameraPermissions();
-  const [galleryPermission, requestGalleryPermission] = ImagePicker.useMediaLibraryPermissions();
+  const cameraRef = useRef<any>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -77,11 +74,13 @@ export default function AddClothingScreen() {
   };
 
   const pickFromGallery = async () => {
-    // Request gallery permission first
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Toast.show({ type: 'error', text1: '需要相册权限才能选择照片' });
-      return;
+    // Web 环境下直接跳过权限检查
+    if (Platform.OS !== 'web') {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Toast.show({ type: 'error', text1: '需要相册权限才能选择照片' });
+        return;
+      }
     }
     
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -147,8 +146,8 @@ export default function AddClothingScreen() {
         name,
         category: selectedCategory,
         subcategory: selectedSubcategory,
-        imageUrl: processedImage, // 本地路径
-        thumbnailUrl: processedImage, // 本地路径
+        imageUrl: processedImage,
+        thumbnailUrl: processedImage,
       });
       Toast.show({ type: 'success', text1: '添加成功' });
       resetCapture();
@@ -165,33 +164,6 @@ export default function AddClothingScreen() {
     const cat = categories.find((c) => c.id === categoryId);
     return cat?.subcategories || [];
   };
-
-  if (!permission) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#8B7355" />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (!permission.granted) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.permissionContainer}>
-          <Ionicons name="camera-outline" size={64} color="#8B7355" />
-          <Text style={styles.permissionTitle}>需要相机权限</Text>
-          <Text style={styles.permissionText}>
-            请允许访问相机以拍摄衣服照片
-          </Text>
-          <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
-            <Text style={styles.permissionButtonText}>授予权限</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   if (capturedImage && processedImage) {
     return (
@@ -277,8 +249,8 @@ export default function AddClothingScreen() {
                       </Text>
                     </TouchableOpacity>
                   ))}
-                </View>
-              </ScrollView>
+                  </View>
+                </ScrollView>
               </View>
             </View>
           )}
@@ -367,37 +339,47 @@ export default function AddClothingScreen() {
         <View style={{ width: 28 }} />
       </View>
 
-      {/* Camera View */}
-      <View style={styles.cameraContainer}>
-        <CameraView
-          ref={cameraRef}
-          style={styles.camera}
-          facing="back"
-        >
-          <View style={styles.cameraOverlay}>
-            <View style={styles.cameraGuide}>
-              <View style={[styles.guideCorner, styles.guideTopLeft]} />
-              <View style={[styles.guideCorner, styles.guideTopRight]} />
-              <View style={[styles.guideCorner, styles.guideBottomLeft]} />
-              <View style={[styles.guideCorner, styles.guideBottomRight]} />
+      {/* Camera View - Web 环境下显示提示 */}
+      {Platform.OS === 'web' ? (
+        <View style={styles.webContainer}>
+          <Ionicons name="camera-outline" size={64} color="#8B7355" />
+          <Text style={styles.webText}>相机功能在 Web 端不可用</Text>
+          <Text style={styles.webSubText}>请点击下方按钮从相册选择图片</Text>
+          <TouchableOpacity style={styles.webButton} onPress={pickFromGallery}>
+            <Ionicons name="images-outline" size={24} color="#FFFFFF" />
+            <Text style={styles.webButtonText}>从相册选择</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <>
+          <View style={styles.cameraContainer}>
+            <View style={styles.camera}>
+              <View style={styles.cameraOverlay}>
+                <View style={styles.cameraGuide}>
+                  <View style={[styles.guideCorner, styles.guideTopLeft]} />
+                  <View style={[styles.guideCorner, styles.guideTopRight]} />
+                  <View style={[styles.guideCorner, styles.guideBottomLeft]} />
+                  <View style={[styles.guideCorner, styles.guideBottomRight]} />
+                </View>
+                <Text style={styles.cameraHint}>将衣服置于框内</Text>
+              </View>
             </View>
-            <Text style={styles.cameraHint}>将衣服置于框内</Text>
           </View>
-        </CameraView>
-      </View>
 
-      {/* Controls */}
-      <View style={styles.controls}>
-        <TouchableOpacity style={styles.galleryButton} onPress={pickFromGallery}>
-          <Ionicons name="images-outline" size={28} color="#FFFFFF" />
-        </TouchableOpacity>
+          {/* Controls */}
+          <View style={styles.controls}>
+            <TouchableOpacity style={styles.galleryButton} onPress={pickFromGallery}>
+              <Ionicons name="images-outline" size={28} color="#FFFFFF" />
+            </TouchableOpacity>
 
-        <TouchableOpacity style={styles.captureButton} onPress={takePicture}>
-          <View style={styles.captureButtonInner} />
-        </TouchableOpacity>
+            <TouchableOpacity style={styles.captureButton} onPress={takePicture}>
+              <View style={styles.captureButtonInner} />
+            </TouchableOpacity>
 
-        <View style={{ width: 56 }} />
-      </View>
+            <View style={{ width: 56 }} />
+          </View>
+        </>
+      )}
     </SafeAreaView>
   );
 }
@@ -406,41 +388,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFBF5',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  permissionContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  permissionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#3D3D3D',
-    marginTop: 20,
-  },
-  permissionText: {
-    fontSize: 14,
-    color: '#8A8A8A',
-    textAlign: 'center',
-    marginTop: 12,
-    marginBottom: 24,
-  },
-  permissionButton: {
-    backgroundColor: '#8B7355',
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-    borderRadius: 12,
-  },
-  permissionButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
   },
   header: {
     flexDirection: 'row',
@@ -556,6 +503,38 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
     backgroundColor: '#8B7355',
+  },
+  webContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  webText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#3D3D3D',
+    marginTop: 20,
+  },
+  webSubText: {
+    fontSize: 14,
+    color: '#8A8A8A',
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  webButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#8B7355',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  webButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   previewContainer: {
     flex: 1,
