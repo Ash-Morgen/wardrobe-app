@@ -1,0 +1,17 @@
+[
+  {
+    "name": "测试套装",
+    "items": [
+      {
+        "clothingId": "test-1",
+        "position": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    ],
+    "id": "07504b8f-704a-4d9b-a803-30a2eab87d0f",
+    "createdAt": "2026-06-18T18:00:22.491Z",
+    "updatedAt": "2026-06-18T18:00:22.491Z"
+  }
+]

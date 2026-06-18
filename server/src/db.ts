@@ -1,89 +1,199 @@
-import Database from 'better-sqlite3';
-import path from 'path';
-
-const dbPath = path.join(process.cwd(), 'data', 'wardrobe.db');
-
-// 确保 data 目录存在
 import fs from 'fs';
-const dataDir = path.dirname(dbPath);
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+
+// Simple file-based storage
+const DATA_DIR = path.join(process.cwd(), 'data');
+const CLOTHING_FILE = path.join(DATA_DIR, 'clothing.json');
+const OUTFITS_FILE = path.join(DATA_DIR, 'outfits.json');
+
+// Ensure data directory exists
+function ensureDataDir() {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
 }
 
-const db = new Database(dbPath);
+// Clothing types
+interface ClothingItem {
+  id: string;
+  name: string;
+  category: string;
+  subcategory?: string;
+  imageUrl: string;
+  thumbnailUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
-// 初始化数据库表
-db.exec(`
-  CREATE TABLE IF NOT EXISTS clothing (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    category TEXT NOT NULL,
-    subcategory TEXT,
-    imageUrl TEXT NOT NULL,
-    thumbnailUrl TEXT,
-    createdAt TEXT NOT NULL,
-    updatedAt TEXT NOT NULL
-  );
+// Outfit types
+interface OutfitItem {
+  clothingId: string;
+  position: { x: number; y: number };
+}
 
-  CREATE TABLE IF NOT EXISTS outfits (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    description TEXT,
-    items TEXT NOT NULL DEFAULT '[]',
-    createdAt TEXT NOT NULL,
-    updatedAt TEXT NOT NULL
-  );
-`);
+interface Outfit {
+  id: string;
+  name: string;
+  description?: string;
+  items: OutfitItem[];
+  createdAt: string;
+  updatedAt: string;
+}
 
-export default db;
+// Storage functions
+function loadData<T>(filePath: string, defaultValue: T[]): T[] {
+  ensureDataDir();
+  try {
+    if (fs.existsSync(filePath)) {
+      const data = fs.readFileSync(filePath, 'utf-8');
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error(`Error loading ${filePath}:`, error);
+  }
+  return defaultValue;
+}
 
-// 辅助函数
-export function clothingToRow(clothing: any) {
-  return {
-    id: clothing.id,
-    name: clothing.name,
-    category: clothing.category,
-    subcategory: clothing.subcategory || null,
-    imageUrl: clothing.imageUrl,
-    thumbnailUrl: clothing.thumbnailUrl || null,
-    createdAt: clothing.createdAt,
-    updatedAt: clothing.updatedAt,
+function saveData<T>(filePath: string, data: T[]): void {
+  ensureDataDir();
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+}
+
+// Clothing operations
+function getAllClothing(): ClothingItem[] {
+  return loadData<ClothingItem>(CLOTHING_FILE, []);
+}
+
+function getClothingById(id: string): ClothingItem | undefined {
+  const clothing = getAllClothing();
+  return clothing.find(c => c.id === id);
+}
+
+function createClothing(item: Omit<ClothingItem, 'id' | 'createdAt' | 'updatedAt'>): ClothingItem {
+  const clothing = getAllClothing();
+  const now = new Date().toISOString();
+  const newItem: ClothingItem = {
+    ...item,
+    id: uuidv4(),
+    createdAt: now,
+    updatedAt: now
   };
+  clothing.push(newItem);
+  saveData(CLOTHING_FILE, clothing);
+  return newItem;
 }
 
-export function rowToClothing(row: any) {
-  if (!row) return null;
-  return {
-    id: row.id,
-    name: row.name,
-    category: row.category,
-    subcategory: row.subcategory,
-    imageUrl: row.imageUrl,
-    thumbnailUrl: row.thumbnailUrl,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
+function updateClothing(id: string, updates: Partial<ClothingItem>): ClothingItem | null {
+  const clothing = getAllClothing();
+  const index = clothing.findIndex(c => c.id === id);
+  if (index === -1) return null;
+  
+  clothing[index] = {
+    ...clothing[index],
+    ...updates,
+    updatedAt: new Date().toISOString()
   };
+  saveData(CLOTHING_FILE, clothing);
+  return clothing[index];
 }
 
-export function outfitToRow(outfit: any) {
-  return {
-    id: outfit.id,
-    name: outfit.name,
-    description: outfit.description || null,
-    items: JSON.stringify(outfit.items || []),
-    createdAt: outfit.createdAt,
-    updatedAt: outfit.updatedAt,
-  };
+function deleteClothing(id: string): boolean {
+  const clothing = getAllClothing();
+  const index = clothing.findIndex(c => c.id === id);
+  if (index === -1) return false;
+  
+  clothing.splice(index, 1);
+  saveData(CLOTHING_FILE, clothing);
+  return true;
 }
 
-export function rowToOutfit(row: any) {
-  if (!row) return null;
-  return {
-    id: row.id,
-    name: row.name,
-    description: row.description,
-    items: JSON.parse(row.items || '[]'),
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
-  };
+// Outfit operations
+function getAllOutfits(): Outfit[] {
+  return loadData<Outfit>(OUTFITS_FILE, []);
 }
+
+function getOutfitById(id: string): Outfit | undefined {
+  const outfits = getAllOutfits();
+  return outfits.find(o => o.id === id);
+}
+
+function createOutfit(data: Omit<Outfit, 'id' | 'createdAt' | 'updatedAt'>): Outfit {
+  const outfits = getAllOutfits();
+  const now = new Date().toISOString();
+  const newOutfit: Outfit = {
+    ...data,
+    id: uuidv4(),
+    createdAt: now,
+    updatedAt: now
+  };
+  outfits.push(newOutfit);
+  saveData(OUTFITS_FILE, outfits);
+  return newOutfit;
+}
+
+function updateOutfit(id: string, updates: Partial<Outfit>): Outfit | null {
+  const outfits = getAllOutfits();
+  const index = outfits.findIndex(o => o.id === id);
+  if (index === -1) return null;
+  
+  outfits[index] = {
+    ...outfits[index],
+    ...updates,
+    updatedAt: new Date().toISOString()
+  };
+  saveData(OUTFITS_FILE, outfits);
+  return outfits[index];
+}
+
+function deleteOutfit(id: string): boolean {
+  const outfits = getAllOutfits();
+  const index = outfits.findIndex(o => o.id === id);
+  if (index === -1) return false;
+  
+  outfits.splice(index, 1);
+  saveData(OUTFITS_FILE, outfits);
+  return true;
+}
+
+// Initialize with sample data
+function initDb(): void {
+  ensureDataDir();
+  const clothing = getAllClothing();
+  
+  if (clothing.length === 0) {
+    console.log('Initializing sample clothing data...');
+    const sampleClothing = [
+      { name: '白色棉质T恤', category: 'tops', subcategory: 'T恤', imageUrl: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400', thumbnailUrl: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=200' },
+      { name: '蓝色条纹衬衫', category: 'tops', subcategory: '衬衫', imageUrl: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400', thumbnailUrl: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=200' },
+      { name: '黑色休闲裤', category: 'bottoms', subcategory: '休闲裤', imageUrl: 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400', thumbnailUrl: 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=200' },
+      { name: '蓝色牛仔裤', category: 'bottoms', subcategory: '牛仔裤', imageUrl: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400', thumbnailUrl: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=200' },
+      { name: '灰色连帽卫衣', category: 'tops', subcategory: '卫衣', imageUrl: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400', thumbnailUrl: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=200' },
+      { name: '黑色皮夹克', category: 'outerwear', subcategory: '夹克', imageUrl: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400', thumbnailUrl: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=200' },
+      { name: '驼色风衣', category: 'outerwear', subcategory: '风衣', imageUrl: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=400', thumbnailUrl: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=200' },
+      { name: '棕色手提包', category: 'bags', subcategory: '手提包', imageUrl: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400', thumbnailUrl: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=200' },
+      { name: '黑色双肩包', category: 'bags', subcategory: '背包', imageUrl: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400', thumbnailUrl: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=200' },
+      { name: '黑色棒球帽', category: 'accessories', subcategory: '帽子', imageUrl: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=400', thumbnailUrl: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=200' },
+      { name: '小黑裙', category: 'dresses', subcategory: '连衣裙', imageUrl: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400', thumbnailUrl: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=200' },
+    ];
+    
+    for (const item of sampleClothing) {
+      createClothing(item);
+    }
+    console.log('Sample data initialized with', sampleClothing.length, 'items');
+  }
+}
+
+export default {
+  initDb,
+  getAllClothing,
+  getClothingById,
+  createClothing,
+  updateClothing,
+  deleteClothing,
+  getAllOutfits,
+  getOutfitById,
+  createOutfit,
+  updateOutfit,
+  deleteOutfit
+};

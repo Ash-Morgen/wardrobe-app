@@ -1,0 +1,112 @@
+[
+  {
+    "name": "白色棉质T恤",
+    "category": "tops",
+    "subcategory": "T恤",
+    "imageUrl": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=200",
+    "id": "4143a01c-5a4b-4852-b215-32c4ee3b0664",
+    "createdAt": "2026-06-18T17:59:44.211Z",
+    "updatedAt": "2026-06-18T17:59:44.211Z"
+  },
+  {
+    "name": "蓝色条纹衬衫",
+    "category": "tops",
+    "subcategory": "衬衫",
+    "imageUrl": "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=200",
+    "id": "5c10cf27-a336-443c-a4f4-7c02c644928f",
+    "createdAt": "2026-06-18T17:59:44.213Z",
+    "updatedAt": "2026-06-18T17:59:44.213Z"
+  },
+  {
+    "name": "黑色休闲裤",
+    "category": "bottoms",
+    "subcategory": "休闲裤",
+    "imageUrl": "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=200",
+    "id": "104eaa81-e240-4017-be5d-f7cd92b2eb85",
+    "createdAt": "2026-06-18T17:59:44.213Z",
+    "updatedAt": "2026-06-18T17:59:44.213Z"
+  },
+  {
+    "name": "蓝色牛仔裤",
+    "category": "bottoms",
+    "subcategory": "牛仔裤",
+    "imageUrl": "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1542272604-787c3835535d?w=200",
+    "id": "333d3ba9-5a00-4f8a-a51d-dbab1ca0d1ae",
+    "createdAt": "2026-06-18T17:59:44.213Z",
+    "updatedAt": "2026-06-18T17:59:44.213Z"
+  },
+  {
+    "name": "灰色连帽卫衣",
+    "category": "tops",
+    "subcategory": "卫衣",
+    "imageUrl": "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=200",
+    "id": "de1a0613-470f-4e93-a68d-43b497276973",
+    "createdAt": "2026-06-18T17:59:44.213Z",
+    "updatedAt": "2026-06-18T17:59:44.213Z"
+  },
+  {
+    "name": "黑色皮夹克",
+    "category": "outerwear",
+    "subcategory": "夹克",
+    "imageUrl": "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=200",
+    "id": "d2b04c47-44aa-4ceb-a6d8-d1776259f7ac",
+    "createdAt": "2026-06-18T17:59:44.214Z",
+    "updatedAt": "2026-06-18T17:59:44.214Z"
+  },
+  {
+    "name": "驼色风衣",
+    "category": "outerwear",
+    "subcategory": "风衣",
+    "imageUrl": "https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=400",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=200",
+    "id": "23f749f1-52db-4fc4-835f-365d667abe51",
+    "createdAt": "2026-06-18T17:59:44.214Z",
+    "updatedAt": "2026-06-18T17:59:44.214Z"
+  },
+  {
+    "name": "棕色手提包",
+    "category": "bags",
+    "subcategory": "手提包",
+    "imageUrl": "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=200",
+    "id": "950d6b79-6456-40fd-bb2c-b60be0761b08",
+    "createdAt": "2026-06-18T17:59:44.214Z",
+    "updatedAt": "2026-06-18T17:59:44.214Z"
+  },
+  {
+    "name": "黑色双肩包",
+    "category": "bags",
+    "subcategory": "背包",
+    "imageUrl": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=200",
+    "id": "3878740f-54bf-4b15-b10f-3b05d53593ca",
+    "createdAt": "2026-06-18T17:59:44.214Z",
+    "updatedAt": "2026-06-18T17:59:44.214Z"
+  },
+  {
+    "name": "黑色棒球帽",
+    "category": "accessories",
+    "subcategory": "帽子",
+    "imageUrl": "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=400",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=200",
+    "id": "221bba26-8e38-4e09-a1ad-6276793da30c",
+    "createdAt": "2026-06-18T17:59:44.214Z",
+    "updatedAt": "2026-06-18T17:59:44.214Z"
+  },
+  {
+    "name": "小黑裙",
+    "category": "dresses",
+    "subcategory": "连衣裙",
+    "imageUrl": "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=200",
+    "id": "40e2c4db-0aeb-4ca2-9509-69b29e80a029",
+    "createdAt": "2026-06-18T17:59:44.214Z",
+    "updatedAt": "2026-06-18T17:59:44.214Z"
+  }
+]
