@@ -31,7 +31,7 @@ export default function OutfitScreen() {
   const [selectedItems, setSelectedItems] = useState<{ clothingId: string; position: { x: number; y: number } }[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [selectFilterCategory, setSelectFilterCategory] = useState<string>('all');
-
+  const { themeColor } = useContext(ThemeContext);
   const CATEGORIES = [
     { id: 'all', name: '全部' },
     { id: 'tops', name: '上衣' },
@@ -597,7 +597,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#8B7355',
+    backgroundColor: themeColor,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#8B7355',
+    shadowColor: themeColor.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
@@ -806,7 +806,7 @@ const styles = StyleSheet.create({
   },
   emptyButton: {
     marginTop: 24,
-    backgroundColor: '#8B7355',
+    backgroundColor: themeColor.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
@@ -840,7 +840,7 @@ const styles = StyleSheet.create({
   },
   modalSave: {
     fontSize: 16,
-    color: '#8B7355',
+    color: themeColor,
     fontWeight: '600',
   },
   modalSaveDisabled: {
@@ -881,7 +881,7 @@ const styles = StyleSheet.create({
   },
   addButton: {
     fontSize: 14,
-    color: '#8B7355',
+    color: themeColor,
     fontWeight: '600',
   },
   emptySelection: {

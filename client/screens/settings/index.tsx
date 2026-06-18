@@ -325,7 +325,7 @@ export default function SettingsScreen() {
                     style={styles.actionButton}
                     onPress={() => handleEditCategory(category)}
                   >
-                    <Ionicons name="pencil" size={18} color="#8B7355" />
+                    <Ionicons name="pencil" size={18} color={themeColor} />
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.actionButton}
@@ -349,7 +349,7 @@ export default function SettingsScreen() {
             style={styles.resetButton}
             onPress={handleResetCategories}
           >
-            <Ionicons name="refresh" size={18} color="#8B7355" />
+            <Ionicons name="refresh" size={18} color={themeColor} />
             <Text style={styles.resetButtonText}>重置为默认分类</Text>
           </TouchableOpacity>
         </View>
@@ -512,7 +512,7 @@ const styles = StyleSheet.create({
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#8B7355',
+    backgroundColor: themeColor,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -588,7 +588,7 @@ const styles = StyleSheet.create({
   },
   resetButtonText: {
     fontSize: 14,
-    color: '#8B7355',
+    color: themeColor,
   },
   aboutItem: {
     flexDirection: 'row',
@@ -677,7 +677,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     flex: 1,
-    backgroundColor: '#8B7355',
+    backgroundColor: themeColor,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',

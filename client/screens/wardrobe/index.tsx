@@ -36,7 +36,7 @@ const CATEGORY_TABS = [
 export default function WardrobeScreen() {
   const { width } = useWindowDimensions();
   const router = useSafeRouter();
-  const { accentColor } = useTheme();
+  const { accentColor, themeColor } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [clothingList, setClothingList] = useState<Clothing[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -357,7 +357,7 @@ export default function WardrobeScreen() {
                 <Text style={styles.actionButtonText}>取消</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: '#8B7355' }]}
+                style={[styles.actionButton, { backgroundColor: themeColor }]}
                 onPress={handleSaveEdit}
               >
                 <Text style={[styles.actionButtonText, { color: '#FFF' }]}>保存</Text>
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   categoryTabActive: {
-    backgroundColor: '#8B7355',
+    backgroundColor: themeColor,
   },
   categoryTabText: {
     fontSize: 14,
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#8B7355',
+    shadowColor: themeColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
   },
   cardTagText: {
     fontSize: 11,
-    color: '#8B7355',
+    color: themeColor,
     fontWeight: '500',
   },
   emptyContainer: {
@@ -595,10 +595,10 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#8B7355',
+    backgroundColor: themeColor,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#8B7355',
+    shadowColor: themeColor,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
