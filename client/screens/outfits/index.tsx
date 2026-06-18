@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
-    shadowColor: themeColor.shadowColor,
+    shadowColor: themeColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
@@ -806,7 +806,7 @@ const styles = StyleSheet.create({
   },
   emptyButton: {
     marginTop: 24,
-    backgroundColor: themeColor.primary,
+    backgroundColor: themeColor,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,

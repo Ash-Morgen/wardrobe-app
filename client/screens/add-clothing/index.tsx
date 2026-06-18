@@ -173,7 +173,7 @@ export default function AddClothingScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="themeColor" />
+          <ActivityIndicator size="large" color={themeColor} />
         </View>
       </SafeAreaView>
     );
@@ -183,7 +183,7 @@ export default function AddClothingScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.permissionContainer}>
-          <Ionicons name="camera-outline" size={64} color="themeColor" />
+          <Ionicons name="camera-outline" size={64} color={themeColor} />
           <Text style={styles.permissionTitle}>需要相机权限</Text>
           <Text style={styles.permissionText}>
             请允许访问相机以拍摄衣服照片
@@ -213,7 +213,7 @@ export default function AddClothingScreen() {
           <View style={styles.imagePreviewContainer}>
             {isProcessing ? (
               <View style={styles.processingOverlay}>
-                <ActivityIndicator size="large" color="themeColor" />
+                <ActivityIndicator size="large" color={themeColor} />
                 <Text style={styles.processingText}>正在处理图片...</Text>
               </View>
             ) : (
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   permissionButton: {
-    backgroundColor: 'themeColor',
+    backgroundColor: themeColor,
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 12,
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 30,
     height: 30,
-    borderColor: 'themeColor',
+    borderColor: themeColor,
   },
   guideTopLeft: {
     top: 0,
@@ -552,13 +552,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 4,
-    borderColor: 'themeColor',
+    borderColor: themeColor,
   },
   captureButtonInner: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: 'themeColor',
+    backgroundColor: themeColor,
   },
   previewContainer: {
     flex: 1,
@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
   processingText: {
     marginTop: 12,
     fontSize: 14,
-    color: 'themeColor',
+    color: themeColor,
   },
   sectionTitle: {
     fontSize: 16,
@@ -607,7 +607,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F0EB',
   },
   categoryChipActive: {
-    backgroundColor: 'themeColor',
+    backgroundColor: themeColor,
   },
   categoryChipText: {
     fontSize: 14,
@@ -669,7 +669,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'themeColor',
+    backgroundColor: themeColor,
     paddingVertical: 16,
     borderRadius: 14,
   },
@@ -728,7 +728,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: 'themeColor',
+    backgroundColor: themeColor,
     alignItems: 'center',
   },
   modalConfirmText: {
