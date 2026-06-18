@@ -86,9 +86,10 @@ export default function SettingsScreen() {
         try {
           const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/categories`);
           if (response.ok) {
-            const data = await response.json();
-            setCategories(data);
-            await AsyncStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(data));
+            const result = await response.json();
+            const categoriesData = result.data || [];
+            setCategories(categoriesData);
+            await AsyncStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categoriesData));
           }
         } catch (e) {
           // 后端获取失败，使用本地存储
@@ -189,7 +190,7 @@ export default function SettingsScreen() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newCategory),
       });
-      const savedCategory = await response.json();
+      const savedCategory = (await response.json()).data;
       
       // 更新本地列表（使用后端返回的完整数据）
       const finalCategories = response.ok 
