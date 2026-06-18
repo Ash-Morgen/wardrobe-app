@@ -420,9 +420,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F0EB',
     marginHorizontal: 4,
   },
-  categoryTabActive: {
-    backgroundColor: themeColor,
-  },
+
   categoryTabText: {
     fontSize: 14,
     color: '#8A8A8A',
@@ -450,7 +448,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: themeColor,
+    shadowColor: '#8B7355',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
@@ -480,7 +478,7 @@ const styles = StyleSheet.create({
   },
   cardTagText: {
     fontSize: 11,
-    color: themeColor,
+    color: '#8B7355',
     fontWeight: '500',
   },
   emptyContainer: {
