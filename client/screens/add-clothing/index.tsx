@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   permissionButton: {
-    backgroundColor: themeColor,
+    backgroundColor: '#8B7355',
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 12,
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 30,
     height: 30,
-    borderColor: themeColor,
+    borderColor: '#8B7355',
   },
   guideTopLeft: {
     top: 0,
@@ -552,13 +552,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 4,
-    borderColor: themeColor,
+    borderColor: '#8B7355',
   },
   captureButtonInner: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: themeColor,
+    backgroundColor: '#8B7355',
   },
   previewContainer: {
     flex: 1,
@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
   processingText: {
     marginTop: 12,
     fontSize: 14,
-    color: themeColor,
+    color: '#8B7355',
   },
   sectionTitle: {
     fontSize: 16,
@@ -607,7 +607,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F0EB',
   },
   categoryChipActive: {
-    backgroundColor: themeColor,
+    backgroundColor: '#8B7355',
   },
   categoryChipText: {
     fontSize: 14,
@@ -669,7 +669,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: themeColor,
+    backgroundColor: '#8B7355',
     paddingVertical: 16,
     borderRadius: 14,
   },
@@ -728,7 +728,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: themeColor,
+    backgroundColor: '#8B7355',
     alignItems: 'center',
   },
   modalConfirmText: {

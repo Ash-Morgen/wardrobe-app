@@ -597,7 +597,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: themeColor,
+    backgroundColor: '#8B7355',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
-    shadowColor: themeColor,
+    shadowColor: '#8B7355',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
@@ -806,7 +806,7 @@ const styles = StyleSheet.create({
   },
   emptyButton: {
     marginTop: 24,
-    backgroundColor: themeColor,
+    backgroundColor: '#8B7355',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
@@ -840,7 +840,7 @@ const styles = StyleSheet.create({
   },
   modalSave: {
     fontSize: 16,
-    color: themeColor,
+    color: '#8B7355',
     fontWeight: '600',
   },
   modalSaveDisabled: {
@@ -881,7 +881,7 @@ const styles = StyleSheet.create({
   },
   addButton: {
     fontSize: 14,
-    color: themeColor,
+    color: '#8B7355',
     fontWeight: '600',
   },
   emptySelection: {

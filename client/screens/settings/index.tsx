@@ -512,7 +512,7 @@ const styles = StyleSheet.create({
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: themeColor,
+    backgroundColor: '#8B7355',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -588,7 +588,7 @@ const styles = StyleSheet.create({
   },
   resetButtonText: {
     fontSize: 14,
-    color: themeColor,
+    color: '#8B7355',
   },
   aboutItem: {
     flexDirection: 'row',
@@ -677,7 +677,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     flex: 1,
-    backgroundColor: themeColor,
+    backgroundColor: '#8B7355',
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
