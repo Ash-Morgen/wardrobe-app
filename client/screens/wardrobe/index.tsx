@@ -186,7 +186,7 @@ export default function WardrobeScreen() {
               key={tab.id}
               style={[
                 styles.categoryTab,
-                selectedCategory === tab.id && styles.categoryTabActive,
+                selectedCategory === tab.id && { backgroundColor: themeColor || '#8B7355' },
               ]}
               onPress={() => handleCategoryChange(tab.id)}
             >
