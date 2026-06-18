@@ -21,7 +21,7 @@ import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { clothingApi, Category, Clothing, buildAssetUrl } from '@/utils/api';
 import { distributeItems, getOptimizedDimensions, MasonryItem } from '@/utils/masonry';
 import Toast from 'react-native-toast-message';
-import { ThemeContext } from '@/contexts/ThemeContext';
+import { ThemeContext, useTheme } from '@/contexts/ThemeContext';
 
 const CATEGORY_TABS = [
   { id: 'all', name: '全部' },
@@ -36,7 +36,7 @@ const CATEGORY_TABS = [
 export default function WardrobeScreen() {
   const { width } = useWindowDimensions();
   const router = useSafeRouter();
-  const { accentColor } = React.useContext(ThemeContext);
+  const { accentColor } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [clothingList, setClothingList] = useState<Clothing[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
