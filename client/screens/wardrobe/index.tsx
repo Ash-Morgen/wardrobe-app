@@ -21,6 +21,7 @@ import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { clothingApi, Category, Clothing, buildAssetUrl } from '@/utils/api';
 import { distributeItems, getOptimizedDimensions, MasonryItem } from '@/utils/masonry';
 import Toast from 'react-native-toast-message';
+import { ThemeContext } from '@/contexts/ThemeContext';
 
 const CATEGORY_TABS = [
   { id: 'all', name: '全部' },
@@ -35,6 +36,7 @@ const CATEGORY_TABS = [
 export default function WardrobeScreen() {
   const { width } = useWindowDimensions();
   const router = useSafeRouter();
+  const { accentColor } = React.useContext(ThemeContext);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [clothingList, setClothingList] = useState<Clothing[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -161,15 +163,15 @@ export default function WardrobeScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>我的衣橱</Text>
-        <View style={styles.headerActions}>
-          <Text style={styles.headerCount}>{clothingList.length} 件单品</Text>
-          <TouchableOpacity
-            style={styles.settingsButton}
-            onPress={() => router.push('/settings')}
-          >
-            <Ionicons name="settings-outline" size={24} color="#666" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={styles.settingsButton}
+          onPress={() => router.push('/settings')}
+        >
+          <Ionicons name="settings-outline" size={24} color={accentColor} />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.headerCountRow}>
+        <Text style={styles.headerCount}>{clothingList.length} 件单品</Text>
       </View>
 
       {/* Category Tabs */}
@@ -387,17 +389,20 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#3D3D3D',
   },
+  headerCountRow: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
   headerCount: {
     fontSize: 14,
     color: '#8A8A8A',
   },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
   settingsButton: {
+    position: 'absolute',
+    right: 16,
+    top: 12,
     padding: 4,
+    zIndex: 10,
   },
   categoryContainer: {
     borderBottomWidth: 1,

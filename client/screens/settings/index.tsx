@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const STORAGE_KEYS = {
   THEME_COLOR: '@wardrobe_theme_color',
@@ -64,7 +65,8 @@ const THEME_COLORS = [
 ];
 
 export default function SettingsScreen() {
-  const [themeColor, setThemeColor] = useState('#8B7355');
+  const { themeColor: contextColor, setThemeColor: updateContextColor } = useTheme();
+  const [themeColor, setThemeColor] = useState(contextColor || '#8B7355');
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
@@ -80,9 +82,20 @@ export default function SettingsScreen() {
           setThemeColor(savedColor);
         }
 
-        const savedCategories = await AsyncStorage.getItem(STORAGE_KEYS.CATEGORIES);
-        if (savedCategories) {
-          setCategories(JSON.parse(savedCategories));
+        // 从后端获取分类
+        try {
+          const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/categories`);
+          if (response.ok) {
+            const data = await response.json();
+            setCategories(data);
+            await AsyncStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(data));
+          }
+        } catch (e) {
+          // 后端获取失败，使用本地存储
+          const savedCategories = await AsyncStorage.getItem(STORAGE_KEYS.CATEGORIES);
+          if (savedCategories) {
+            setCategories(JSON.parse(savedCategories));
+          }
         }
       } catch (error) {
         console.error('加载设置失败:', error);
@@ -95,6 +108,7 @@ export default function SettingsScreen() {
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.THEME_COLOR, color);
       setThemeColor(color);
+      updateContextColor(color); // 同时更新全局主题
       Toast.show({ type: 'success', text1: '主题色已更新' });
     } catch (error) {
       Toast.show({ type: 'error', text1: '保存失败' });
@@ -123,6 +137,13 @@ export default function SettingsScreen() {
     );
 
     try {
+      // 保存到后端
+      await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/categories/${editingCategory.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editName, subcategories: newSubcategories }),
+      });
+      // 保存到本地
       await AsyncStorage.setItem(
         STORAGE_KEYS.CATEGORIES,
         JSON.stringify(updatedCategories)
@@ -162,39 +183,60 @@ export default function SettingsScreen() {
     const updatedCategories = [...categories, newCategory];
 
     try {
-      await AsyncStorage.setItem(
-        STORAGE_KEYS.CATEGORIES,
-        JSON.stringify(updatedCategories)
-      );
-      setCategories(updatedCategories);
+      // 保存到后端
+      const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/categories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newCategory),
+      });
+      const savedCategory = await response.json();
+      
+      // 更新本地列表（使用后端返回的完整数据）
+      const finalCategories = response.ok 
+        ? [...categories, savedCategory]
+        : updatedCategories;
+      
+      await AsyncStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(finalCategories));
+      setCategories(finalCategories);
       setEditModalVisible(false);
       Toast.show({ type: 'success', text1: '分类已添加' });
     } catch (error) {
-      Toast.show({ type: 'error', text1: '保存失败' });
+      // 网络错误时保存到本地
+      await AsyncStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(updatedCategories));
+      setCategories(updatedCategories);
+      setEditModalVisible(false);
+      Toast.show({ type: 'success', text1: '分类已添加（离线）' });
     }
   };
 
   const handleDeleteCategory = (categoryId: string) => {
-    Alert.alert('确认删除', '确定要删除该分类吗？该操作不可恢复。', [
-      { text: '取消', style: 'cancel' },
-      {
-        text: '删除',
-        style: 'destructive',
-        onPress: async () => {
-          const updatedCategories = categories.filter((c) => c.id !== categoryId);
-          try {
-            await AsyncStorage.setItem(
-              STORAGE_KEYS.CATEGORIES,
-              JSON.stringify(updatedCategories)
-            );
-            setCategories(updatedCategories);
-            Toast.show({ type: 'success', text1: '分类已删除' });
-          } catch (error) {
-            Toast.show({ type: 'error', text1: '删除失败' });
-          }
+    const category = categories.find((c) => c.id === categoryId);
+    Alert.alert(
+      '确认删除', 
+      `确定要删除"${category?.name}"分类吗？\n\n该操作将同时删除该分类下的所有衣服数据，且不可恢复。`, 
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '删除',
+          style: 'destructive',
+          onPress: async () => {
+            const updatedCategories = categories.filter((c) => c.id !== categoryId);
+            try {
+              // 调用后端删除分类接口（会自动删除该分类下的所有衣服）
+              await fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/categories/${categoryId}`, {
+                method: 'DELETE',
+              });
+              // 保存到本地
+              await AsyncStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(updatedCategories));
+              setCategories(updatedCategories);
+              Toast.show({ type: 'success', text1: '分类及该分类下的衣服已删除' });
+            } catch (error) {
+              Toast.show({ type: 'error', text1: '删除失败' });
+            }
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const handleResetCategories = async () => {

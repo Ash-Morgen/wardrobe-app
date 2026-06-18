@@ -166,6 +166,47 @@ export const clothingApi = {
   },
 };
 
+// Category API
+export const categoryApi = {
+  getAll: async (): Promise<Category[]> => {
+    const res = await fetch(`${API_URL}/api/v1/categories`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    return data.data;
+  },
+
+  update: async (id: string, data: { name: string; subCategories: string[] }): Promise<Category> => {
+    const res = await fetch(`${API_URL}/api/v1/categories/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error);
+    return result.data;
+  },
+
+  delete: async (id: string): Promise<{ message: string }> => {
+    const res = await fetch(`${API_URL}/api/v1/categories/${id}`, {
+      method: 'DELETE',
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    return data;
+  },
+
+  add: async (data: { name: string; subCategories: string[] }): Promise<Category> => {
+    const res = await fetch(`${API_URL}/api/v1/categories`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error);
+    return result.data;
+  },
+};
+
 // Outfit API
 export const outfitApi = {
   create: async (outfit: { name: string; description?: string; items: OutfitItem[] }): Promise<Outfit> => {
