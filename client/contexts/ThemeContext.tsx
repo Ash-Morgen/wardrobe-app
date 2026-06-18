@@ -21,6 +21,7 @@ interface ThemeContextType {
   themeColor: string;
   setThemeColor: (color: string) => void;
   themeColorName: string;
+  accentColor: string;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
@@ -28,6 +29,7 @@ const ThemeContext = createContext<ThemeContextType>({
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   setThemeColor: () => {},
   themeColorName: THEME_COLORS[0].name,
+  accentColor: THEME_COLORS[0].color,
 });
 
 export const useTheme = () => useContext(ThemeContext);
