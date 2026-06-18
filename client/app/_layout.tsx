@@ -3,7 +3,6 @@ import { StatusBar } from 'expo-status-bar';
 import { LogBox } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Provider } from '@/components/Provider';
-import { ThemeProvider } from '@/contexts/ThemeContext';
 
 import '../global.css';
 
@@ -14,8 +13,7 @@ LogBox.ignoreLogs([
 export default function RootLayout() {
   return (
     <Provider>
-      <ThemeProvider>
-        <Stack
+      <Stack
         screenOptions={{
           animation: 'slide_from_right',
           gestureEnabled: true,
@@ -25,10 +23,8 @@ export default function RootLayout() {
       >
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="add-clothing" options={{ animation: 'slide_from_bottom' }} />
-        <Stack.Screen name="settings" options={{ animation: 'slide_from_right' }} />
       </Stack>
       <Toast />
-      </ThemeProvider>
     </Provider>
   );
 }

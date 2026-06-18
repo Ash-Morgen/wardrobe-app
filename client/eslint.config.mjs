@@ -17,16 +17,14 @@ export default [
     ignores: [
       '**/dist/**',
       '**/node_modules/**',
-      'api/**',
-      'src/api/**',
-      '.expo/**',
-      'tailwind.config.js',
+      'api/**',           // 排除自动生成的 API 代码
+      'src/api/**',       // 排除 src 下的自动生成 API
+      '.expo/**',         // 排除 Expo 自动生成的文件
+      'tailwind.config.js', // 排除 Tailwind 配置文件
       '**/*.d.ts',
       'eslint.config.*',
       'metro.config.*',
       './scripts/**',
-      'heroui/**',
-      'components/Screen.tsx',
     ],
   },
   regexp.configs["flat/recommended"],

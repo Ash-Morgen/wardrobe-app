@@ -25,8 +25,8 @@ export async function createFormDataFile(
  * 构建文件或图片完整的URL
  * 在预览环境下，需要将 localhost URL 替换为实际的 API 地址
  */
-export const buildAssetUrl = (url?: string | null): string => {
-  if (!url) return '';
+export const buildAssetUrl = (url?: string | null): string | undefined => {
+  if (!url) return undefined;
   
   // 如果是 data URI（base64），直接返回
   if (url.startsWith('data:')) return url;
@@ -35,8 +35,8 @@ export const buildAssetUrl = (url?: string | null): string => {
   if (url.startsWith('file://')) return url;
   
   // 如果是 localhost URL，替换为 API_BASE
-  if (/^https?:\/\/localhost(?::\d+)?\//i.test(url)) {
-    return url.replace(/^https?:\/\/localhost(?::\d+)?/i, API_BASE);
+  if (/^https?:\/\/localhost(:\d+)?\//i.test(url)) {
+    return url.replace(/^https?:\/\/localhost(:\d+)?/i, API_BASE);
   }
   
   // 如果是完整 URL，直接返回
@@ -163,47 +163,6 @@ export const clothingApi = {
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.error);
-  },
-};
-
-// Category API
-export const categoryApi = {
-  getAll: async (): Promise<Category[]> => {
-    const res = await fetch(`${API_URL}/api/v1/categories`);
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error);
-    return data.data;
-  },
-
-  update: async (id: string, data: { name: string; subCategories: string[] }): Promise<Category> => {
-    const res = await fetch(`${API_URL}/api/v1/categories/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    const result = await res.json();
-    if (!result.success) throw new Error(result.error);
-    return result.data;
-  },
-
-  delete: async (id: string): Promise<{ message: string }> => {
-    const res = await fetch(`${API_URL}/api/v1/categories/${id}`, {
-      method: 'DELETE',
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error);
-    return data;
-  },
-
-  add: async (data: { name: string; subCategories: string[] }): Promise<Category> => {
-    const res = await fetch(`${API_URL}/api/v1/categories`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    const result = await res.json();
-    if (!result.success) throw new Error(result.error);
-    return result.data;
   },
 };
 

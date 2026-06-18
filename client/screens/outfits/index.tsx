@@ -31,7 +31,7 @@ export default function OutfitScreen() {
   const [selectedItems, setSelectedItems] = useState<{ clothingId: string; position: { x: number; y: number } }[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [selectFilterCategory, setSelectFilterCategory] = useState<string>('all');
-  const { themeColor } = useContext(ThemeContext);
+
   const CATEGORIES = [
     { id: 'all', name: '全部' },
     { id: 'tops', name: '上衣' },

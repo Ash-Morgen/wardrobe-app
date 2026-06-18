@@ -7,14 +7,11 @@ import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import db, { 
   clothingToRow, rowToClothing, 
-  outfitToRow, rowToOutfit,
-  getAllCategories, getCategoryById, updateCategory, deleteCategory
+  outfitToRow, rowToOutfit 
 } from "./db";
 
 const app = express();
 const port = process.env.PORT || 9091;
-
-const generateId = () => `id-${Date.now()}-${uuidv4().slice(0, 8)}`;
 
 // Middleware
 app.use(cors());
@@ -524,99 +521,6 @@ app.delete('/api/v1/outfits/:id', (req: Request, res: Response) => {
   } catch (error) {
     console.error('Delete outfit error:', error);
     res.status(500).json({ success: false, error: 'Failed to delete outfit' });
-  }
-});
-
-// ==================== Category Management ====================
-
-// Get all categories
-app.get('/api/v1/categories', (req: Request, res: Response) => {
-  try {
-    const categories = getAllCategories();
-    res.json(categories);
-  } catch (error) {
-    console.error('Get categories error:', error);
-    res.status(500).json({ success: false, error: 'Failed to get categories' });
-  }
-});
-
-// Update a category (name and subcategories)
-app.put('/api/v1/categories/:id', (req: Request, res: Response) => {
-  try {
-    const id = String(req.params.id);
-    // 兼容前端发送的 subcategories 字段名
-    const name = req.body.name;
-    const subcategories = req.body.subcategories || req.body.subCategories;
-    
-    if (!name || !subcategories) {
-      res.status(400).json({ success: false, error: 'Name and subcategories are required' });
-      return;
-    }
-    
-    const updated = updateCategory(id, name, subcategories);
-    if (!updated) {
-      res.status(404).json({ success: false, error: 'Category not found' });
-      return;
-    }
-    
-    res.json({ success: true, data: updated });
-  } catch (error) {
-    console.error('Update category error:', error);
-    res.status(500).json({ success: false, error: 'Failed to update category' });
-  }
-});
-
-// Delete a category and all clothing in that category
-app.delete('/api/v1/categories/:id', (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    
-    // First delete all clothing in this category
-    const deleteClothingStmt = db.prepare('DELETE FROM clothing WHERE category = ?');
-    const clothingResult = deleteClothingStmt.run(id);
-    
-    // Then delete the category
-    const deleteCategoryStmt = db.prepare('DELETE FROM categories WHERE id = ?');
-    const categoryResult = deleteCategoryStmt.run(id);
-    
-    if (categoryResult.changes === 0) {
-      res.status(404).json({ success: false, error: 'Category not found' });
-      return;
-    }
-    
-    res.json({ 
-      success: true, 
-      message: `Deleted category and ${clothingResult.changes} clothing items` 
-    });
-  } catch (error) {
-    console.error('Delete category error:', error);
-    res.status(500).json({ success: false, error: 'Failed to delete category' });
-  }
-});
-
-// Add a new category
-app.post('/api/v1/categories', (req: Request, res: Response) => {
-  try {
-    // 兼容前端发送的 subcategories 字段名
-    const name = req.body.name;
-    const subcategories = req.body.subcategories || req.body.subCategories;
-    
-    if (!name || !subcategories) {
-      res.status(400).json({ success: false, error: 'Name and subcategories are required' });
-      return;
-    }
-    
-    const id = generateId();
-    const stmt = db.prepare(
-      'INSERT INTO categories (id, name, orderIndex, subcategories, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)'
-    );
-    stmt.run(id, name, 999, JSON.stringify(subcategories), new Date().toISOString(), new Date().toISOString());
-    
-    const category = getCategoryById(id);
-    res.status(201).json(category);
-  } catch (error) {
-    console.error('Add category error:', error);
-    res.status(500).json({ success: false, error: 'Failed to add category' });
   }
 });
 

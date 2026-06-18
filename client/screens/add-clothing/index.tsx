@@ -20,8 +20,6 @@ import { Image as ExpoImage } from 'expo-image';
 import Toast from 'react-native-toast-message';
 import { clothingApi, Category } from '@/utils/api';
 import * as FileSystem from 'expo-file-system/legacy';
-import { ThemeContext } from '@/contexts/ThemeContext';
-import { useContext } from 'react';
 
 const CATEGORY_OPTIONS = [
   { id: 'tops', name: '上衣' },
@@ -34,7 +32,6 @@ const CATEGORY_OPTIONS = [
 
 export default function AddClothingScreen() {
   const router = useSafeRouter();
-  const { themeColor } = useContext(ThemeContext);
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [galleryPermission, requestGalleryPermission] = ImagePicker.useMediaLibraryPermissions();
@@ -173,7 +170,7 @@ export default function AddClothingScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={themeColor} />
+          <ActivityIndicator size="large" color="#8B7355" />
         </View>
       </SafeAreaView>
     );
@@ -183,7 +180,7 @@ export default function AddClothingScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.permissionContainer}>
-          <Ionicons name="camera-outline" size={64} color={themeColor} />
+          <Ionicons name="camera-outline" size={64} color="#8B7355" />
           <Text style={styles.permissionTitle}>需要相机权限</Text>
           <Text style={styles.permissionText}>
             请允许访问相机以拍摄衣服照片
@@ -213,7 +210,7 @@ export default function AddClothingScreen() {
           <View style={styles.imagePreviewContainer}>
             {isProcessing ? (
               <View style={styles.processingOverlay}>
-                <ActivityIndicator size="large" color={themeColor} />
+                <ActivityIndicator size="large" color="#8B7355" />
                 <Text style={styles.processingText}>正在处理图片...</Text>
               </View>
             ) : (
