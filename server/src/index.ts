@@ -39,33 +39,33 @@ app.get('/api/v1/health', (_req: Request, res: Response) => {
 
 // Categories API
 app.get('/api/v1/categories', (_req: Request, res: Response) => {
-  res.json(CATEGORIES);
+  res.json({ success: true, data: CATEGORIES });
 });
 
 // Clothing API
 app.get('/api/v1/clothing', (_req: Request, res: Response) => {
   const clothing = db.getAllClothing();
-  res.json(clothing);
+  res.json({ success: true, data: clothing });
 });
 
 app.get('/api/v1/clothing/:id', (req: Request, res: Response) => {
-  const id = req.params.id as string as string;
+  const id = req.params.id as string;
   const item = db.getClothingById(id);
   if (!item) {
-    return res.status(404).json({ error: 'Clothing not found' });
+    return res.status(404).json({ success: false, error: 'Clothing not found' });
   }
-  res.json(item);
+  res.json({ success: true, data: item });
 });
 
 app.post('/api/v1/clothing/upload', upload.single('image'), async (req: Request, res: Response) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No image file provided' });
+      return res.status(400).json({ success: false, error: 'No image file provided' });
     }
 
     const { name, category } = req.body;
     if (!name || !category) {
-      return res.status(400).json({ error: 'Name and category are required' });
+      return res.status(400).json({ success: false, error: 'Name and category are required' });
     }
 
     // Convert image to base64
@@ -77,10 +77,10 @@ app.post('/api/v1/clothing/upload', upload.single('image'), async (req: Request,
       imageUrl: base64Image
     });
 
-    res.json(newClothing);
+    res.json({ success: true, data: newClothing });
   } catch (error) {
     console.error('Upload error:', error);
-    res.status(500).json({ error: 'Upload failed' });
+    res.status(500).json({ success: false, error: 'Upload failed' });
   }
 });
 
@@ -88,15 +88,15 @@ app.put('/api/v1/clothing/:id', (req: Request, res: Response) => {
   const { name, category, imageUrl } = req.body;
   const updated = db.updateClothing(req.params.id as string, { name, category, imageUrl });
   if (!updated) {
-    return res.status(404).json({ error: 'Clothing not found' });
+    return res.status(404).json({ success: false, error: 'Clothing not found' });
   }
-  res.json(updated);
+  res.json({ success: true, data: updated });
 });
 
 app.delete('/api/v1/clothing/:id', (req: Request, res: Response) => {
   const deleted = db.deleteClothing(req.params.id as string);
   if (!deleted) {
-    return res.status(404).json({ error: 'Clothing not found' });
+    return res.status(404).json({ success: false, error: 'Clothing not found' });
   }
   res.json({ success: true });
 });
@@ -104,22 +104,22 @@ app.delete('/api/v1/clothing/:id', (req: Request, res: Response) => {
 // Outfit API
 app.get('/api/v1/outfits', (_req: Request, res: Response) => {
   const outfits = db.getAllOutfits();
-  res.json(outfits);
+  res.json({ success: true, data: outfits });
 });
 
 app.get('/api/v1/outfits/:id', (req: Request, res: Response) => {
   const outfit = db.getOutfitById(req.params.id as string);
   if (!outfit) {
-    return res.status(404).json({ error: 'Outfit not found' });
+    return res.status(404).json({ success: false, error: 'Outfit not found' });
   }
-  res.json(outfit);
+  res.json({ success: true, data: outfit });
 });
 
 app.post('/api/v1/outfits', (req: Request, res: Response) => {
   try {
     const { name, description, items } = req.body;
     if (!name) {
-      return res.status(400).json({ error: 'Name is required' });
+      return res.status(400).json({ success: false, error: 'Name is required' });
     }
 
     const newOutfit = db.createOutfit({
@@ -128,10 +128,10 @@ app.post('/api/v1/outfits', (req: Request, res: Response) => {
       items: items || []
     });
 
-    res.json(newOutfit);
+    res.json({ success: true, data: newOutfit });
   } catch (error) {
     console.error('Create outfit error:', error);
-    res.status(500).json({ error: 'Failed to create outfit' });
+    res.status(500).json({ success: false, error: 'Failed to create outfit' });
   }
 });
 
@@ -140,19 +140,19 @@ app.put('/api/v1/outfits/:id', (req: Request, res: Response) => {
     const { name, description, items } = req.body;
     const updated = db.updateOutfit(req.params.id as string, { name, description, items });
     if (!updated) {
-      return res.status(404).json({ error: 'Outfit not found' });
+      return res.status(404).json({ success: false, error: 'Outfit not found' });
     }
-    res.json(updated);
+    res.json({ success: true, data: updated });
   } catch (error) {
     console.error('Update outfit error:', error);
-    res.status(500).json({ error: 'Failed to update outfit' });
+    res.status(500).json({ success: false, error: 'Failed to update outfit' });
   }
 });
 
 app.delete('/api/v1/outfits/:id', (req: Request, res: Response) => {
   const deleted = db.deleteOutfit(req.params.id as string);
   if (!deleted) {
-    return res.status(404).json({ error: 'Outfit not found' });
+    return res.status(404).json({ success: false, error: 'Outfit not found' });
   }
   res.json({ success: true });
 });
