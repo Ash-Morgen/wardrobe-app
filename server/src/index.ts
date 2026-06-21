@@ -57,6 +57,30 @@ app.get('/api/v1/clothing/:id', (req: Request, res: Response) => {
   res.json({ success: true, data: item });
 });
 
+// Create clothing with JSON body (imageUrl provided directly)
+app.post('/api/v1/clothing', async (req: Request, res: Response) => {
+  try {
+    const { name, category, subcategory, imageUrl, thumbnailUrl } = req.body;
+
+    if (!name || !category || !imageUrl) {
+      return res.status(400).json({ success: false, error: 'Name, category, and imageUrl are required' });
+    }
+
+    const newClothing = db.createClothing({
+      name,
+      category,
+      subcategory,
+      imageUrl,
+      thumbnailUrl: thumbnailUrl || imageUrl,
+    });
+
+    res.json({ success: true, data: newClothing });
+  } catch (error) {
+    console.error('Create clothing error:', error);
+    res.status(500).json({ success: false, error: 'Failed to create clothing' });
+  }
+});
+
 app.post('/api/v1/clothing/upload', upload.single('image'), async (req: Request, res: Response) => {
   try {
     if (!req.file) {
