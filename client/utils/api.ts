@@ -35,7 +35,7 @@ export const convertToLocalTimeStr = (utcDateStr: string): string => {
   if (!utcDateStr) return utcDateStr;
   const microUtcRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{1,6}/;
   if (!microUtcRegex.test(utcDateStr)) return utcDateStr;
-  const normalized = utcDateStr.replace(/\.(\d{6})$/, (_, frac) => \`.\${frac.slice(0, 3)}\`);
+  const normalized = utcDateStr.replace(/\.(\d{6})$/, (_, frac) => `.${frac.slice(0, 3)}`);
   const d = dayjs.utc(normalized);
   if (!d.isValid()) return utcDateStr;
   return d.local().format("YYYY-MM-DD HH:mm:ss");
