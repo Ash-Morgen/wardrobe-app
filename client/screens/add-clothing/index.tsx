@@ -20,6 +20,7 @@ import { Image as ExpoImage } from 'expo-image';
 import Toast from 'react-native-toast-message';
 import { clothingApi, Category } from '@/utils/api';
 import * as FileSystem from 'expo-file-system/legacy';
+import { useClothingClassifier } from '@/hooks/useClothingClassifier';
 
 export default function AddClothingScreen() {
   const router = useSafeRouter();
@@ -35,6 +36,10 @@ export default function AddClothingScreen() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedSubcategory, setSelectedSubcategory] = useState('');
+  const [aiConfidence, setAiConfidence] = useState<number | null>(null);
+  const [isClassifying, setIsClassifying] = useState(false);
+
+  const classifier = useClothingClassifier();
 
   useEffect(() => {
     loadCategories();
@@ -95,9 +100,29 @@ export default function AddClothingScreen() {
         encoding: (FileSystem as any).EncodingType.Base64,
       });
       
-      // 返回带前缀的 base64 数据（后端会存储这个）
+      // 返回带前缀的 base64 数据
       const imageData = `data:image/jpeg;base64,${base64}`;
       setProcessedImage(imageData);
+
+      // AI 分类识别（使用原始文件路径，不走网络）
+      setIsClassifying(true);
+      try {
+        const result = await classifier.classifyImage(uri);
+        if (result) {
+          setSelectedCategory(result.categoryId);
+          if (result.subcategory) {
+            setSelectedSubcategory(result.subcategory);
+          }
+          setAiConfidence(result.confidence);
+        } else {
+          setAiConfidence(null);
+        }
+      } catch (aiError) {
+        console.error('AI classification failed:', aiError);
+        // AI 失败不影响用户手动选择
+      } finally {
+        setIsClassifying(false);
+      }
     } catch (error) {
       console.error('Failed to process image:', error);
       Toast.show({ type: 'error', text1: '图片处理失败' });
@@ -114,6 +139,9 @@ export default function AddClothingScreen() {
     setClothingName('');
     setSelectedCategory('');
     setSelectedSubcategory('');
+    setIsClassifying(false);
+    setAiConfidence(null);
+    classifier.resetResult();
   };
 
   const handleSave = () => {
@@ -212,6 +240,38 @@ export default function AddClothingScreen() {
               />
             )}
           </View>
+
+          {/* AI 识别结果 */}
+          {(aiConfidence !== null || isClassifying) && (
+            <View style={styles.aiResultContainer}>
+              {isClassifying ? (
+                <View style={styles.aiClassifyingRow}>
+                  <ActivityIndicator size="small" color="#8B7355" />
+                  <Text style={styles.aiClassifyingText}>AI 识别中...</Text>
+                </View>
+              ) : (
+                <View style={styles.aiResultRow}>
+                  <View style={styles.aiLabelRow}>
+                    <Ionicons name="sparkles" size={16} color="#8B7355" />
+                    <Text style={styles.aiLabel}>AI 建议</Text>
+                    <Text style={styles.aiConfidenceText}>
+                      {(aiConfidence! * 100).toFixed(0)}% 匹配
+                    </Text>
+                    {classifier.result && (
+                      <Text style={styles.aiRawLabel}>
+                        {classifier.result.label}
+                      </Text>
+                    )}
+                  </View>
+                  <Text style={styles.aiResultCategory}>
+                    {categories.find(c => c.id === selectedCategory)?.name || '未知'}
+                    {selectedSubcategory ? ` · ${selectedSubcategory}` : ''}
+                  </Text>
+                  <Text style={styles.aiHint}>点击上方分类可修改</Text>
+                </View>
+              )}
+            </View>
+          )}
 
           {/* Quick Select Category */}
           <View style={styles.quickSelectContainer}>
@@ -329,9 +389,9 @@ export default function AddClothingScreen() {
         {/* Save Button */}
         <View style={styles.footer}>
           <TouchableOpacity
-            style={[styles.saveButton, (!selectedCategory || isProcessing) && styles.saveButtonDisabled]}
+            style={[styles.saveButton, (!selectedCategory || isProcessing || isClassifying) && styles.saveButtonDisabled]}
             onPress={handleSave}
-            disabled={!selectedCategory || isProcessing}
+            disabled={!selectedCategory || isProcessing || isClassifying}
           >
             {isSaving ? (
               <ActivityIndicator color="#FFFFFF" />
@@ -572,6 +632,56 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 14,
     color: '#8B7355',
+  },
+  aiResultContainer: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    backgroundColor: '#F8F4EF',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#E8E0D6',
+  },
+  aiClassifyingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  aiClassifyingText: {
+    fontSize: 14,
+    color: '#8B7355',
+  },
+  aiResultRow: {
+    gap: 6,
+  },
+  aiLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  aiLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#8B7355',
+  },
+  aiConfidenceText: {
+    fontSize: 12,
+    color: '#4A7C59',
+    fontWeight: '500',
+  },
+  aiRawLabel: {
+    fontSize: 11,
+    color: '#999',
+    marginLeft: 4,
+  },
+  aiResultCategory: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#3D3D3D',
+  },
+  aiHint: {
+    fontSize: 12,
+    color: '#8A8A8A',
   },
   sectionTitle: {
     fontSize: 16,
