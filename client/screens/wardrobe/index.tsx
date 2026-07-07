@@ -18,19 +18,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image as ExpoImage } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
-import { clothingApi, Category, Clothing, buildAssetUrl } from '@/utils/api';
+import { clothingApi, categoryApi, Category, Clothing, buildAssetUrl } from '@/utils/api';
 import { distributeItems, getOptimizedDimensions, MasonryItem } from '@/utils/masonry';
 import Toast from 'react-native-toast-message';
 
-const CATEGORY_TABS = [
-  { id: 'all', name: '全部' },
-  { id: 'tops', name: '上衣' },
-  { id: 'bottoms', name: '裤子' },
-  { id: 'outerwear', name: '外套' },
-  { id: 'dresses', name: '裙子' },
-  { id: 'bags', name: '包包' },
-  { id: 'accessories', name: '配饰' },
-];
 
 export default function WardrobeScreen() {
   const { width } = useWindowDimensions();
@@ -61,7 +52,7 @@ export default function WardrobeScreen() {
 
   const fetchCategories = useCallback(async () => {
     try {
-      const data = await clothingApi.getCategories();
+      const data = await categoryApi.getAll();
       setCategories(data);
     } catch (error) {
       console.error('Failed to fetch categories:', error);
@@ -146,8 +137,16 @@ export default function WardrobeScreen() {
     return distributeItems(masonryData, COLUMN_WIDTH, 2);
   }, [masonryData, COLUMN_WIDTH]);
 
+  // Build dynamic category tabs from DB, prepending "全部"
+  const dynamicTabs = useMemo(() => {
+    return [
+      { id: 'all', name: '全部' },
+      ...categories.map((c) => ({ id: c.id, name: c.name })),
+    ];
+  }, [categories]);
+
   const getCategoryName = (categoryId: string) => {
-    const cat = CATEGORY_TABS.find((c) => c.id === categoryId);
+    const cat = categories.find((c) => c.id === categoryId);
     return cat?.name || categoryId;
   };
 
@@ -171,7 +170,7 @@ export default function WardrobeScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoryScroll}
         >
-          {CATEGORY_TABS.map((tab) => (
+          {dynamicTabs.map((tab) => (
             <TouchableOpacity
               key={tab.id}
               style={[

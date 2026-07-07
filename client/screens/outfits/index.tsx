@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Image as ExpoImage } from 'expo-image';
 import Toast from 'react-native-toast-message';
-import { outfitApi, clothingApi, Outfit, Clothing, buildAssetUrl } from '@/utils/api';
+import { outfitApi, clothingApi, categoryApi, Outfit, Clothing, Category, buildAssetUrl } from '@/utils/api';
 
 export default function OutfitScreen() {
   const [outfits, setOutfits] = useState<Outfit[]>([]);
@@ -31,16 +31,16 @@ export default function OutfitScreen() {
   const [selectedItems, setSelectedItems] = useState<{ clothingId: string; position: { x: number; y: number } }[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [selectFilterCategory, setSelectFilterCategory] = useState<string>('all');
+  const [categories, setCategories] = useState<Category[]>([]);
 
-  const CATEGORIES = [
-    { id: 'all', name: '全部' },
-    { id: 'tops', name: '上衣' },
-    { id: 'bottoms', name: '裤子' },
-    { id: 'outerwear', name: '外套' },
-    { id: 'dresses', name: '裙子' },
-    { id: 'bags', name: '包包' },
-    { id: 'accessories', name: '配饰' },
-  ];
+  const fetchCategories = useCallback(async () => {
+    try {
+      const data = await categoryApi.getAll();
+      setCategories([{ id: 'all', name: '全部', subcategories: [], sortOrder: -1 }, ...data]);
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+    }
+  }, []);
 
   const fetchOutfits = useCallback(async () => {
     try {
@@ -63,18 +63,18 @@ export default function OutfitScreen() {
   useFocusEffect(
     useCallback(() => {
       const loadData = async () => {
-        await Promise.all([fetchOutfits(), fetchClothing()]);
+        await Promise.all([fetchOutfits(), fetchClothing(), fetchCategories()]);
         setIsLoading(false);
       };
       loadData();
-    }, [fetchOutfits, fetchClothing])
+    }, [fetchOutfits, fetchClothing, fetchCategories])
   );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([fetchOutfits(), fetchClothing()]);
+    await Promise.all([fetchOutfits(), fetchClothing(), fetchCategories()]);
     setRefreshing(false);
-  }, [fetchOutfits, fetchClothing]);
+  }, [fetchOutfits, fetchClothing, fetchCategories]);
 
   // Filter clothing by category for selection
   const filteredClothing = selectFilterCategory === 'all'
@@ -207,15 +207,8 @@ const handleSaveOutfit = async () => {
   };
 
   const getCategoryName = (categoryId: string) => {
-    const names: Record<string, string> = {
-      tops: '上衣',
-      bottoms: '裤子',
-      outerwear: '外套',
-      dresses: '裙子',
-      bags: '包包',
-      accessories: '配饰',
-    };
-    return names[categoryId] || categoryId;
+    const cat = categories.find(c => c.id === categoryId);
+    return cat?.name || categoryId;
   };
 
   return (
@@ -410,7 +403,7 @@ const handleSaveOutfit = async () => {
 
           <View style={styles.filterTabsContainer}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterTabsContent}>
-              {CATEGORIES.map((cat) => (
+              {categories.map((cat) => (
                 <TouchableOpacity
                   key={cat.id}
                   style={[styles.filterTab, selectFilterCategory === cat.id && styles.filterTabActive]}
