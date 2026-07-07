@@ -1,21 +1,23 @@
 import { Tabs } from 'expo-router';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#8B7355',
-        tabBarInactiveTintColor: '#8A8A8A',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: colors.tabBar,
           borderTopWidth: 1,
-          borderTopColor: '#F0EDE8',
+          borderTopColor: colors.border,
           paddingTop: 8,
           paddingBottom: Platform.OS === 'ios' ? insets.bottom : 8,
           height: Platform.OS === 'ios' ? 80 : 60,
@@ -41,6 +43,15 @@ export default function TabLayout() {
           title: '搭配',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="grid" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: '设置',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="settings-outline" size={size} color={color} />
           ),
         }}
       />
