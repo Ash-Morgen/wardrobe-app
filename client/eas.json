@@ -1,0 +1,29 @@
+{
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "COZE_PROJECT_NAME": "衣橱搭配助手",
+        "EXPO_PUBLIC_COZE_PROJECT_NAME": "衣橱搭配助手"
+      }
+    },
+    "production": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "COZE_PROJECT_NAME": "衣橱搭配助手",
+        "EXPO_PUBLIC_COZE_PROJECT_NAME": "衣橱搭配助手"
+      }
+    }
+  },
+  "cli": {
+    "requireCommit": false,
+    "appVersionSource": "local"
+  }
+}
