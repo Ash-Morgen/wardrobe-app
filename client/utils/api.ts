@@ -7,8 +7,7 @@ dayjs.extend(utc);
 import * as DB from "@/database";
 
 // Re-export types for backward compatibility
-export type { Clothing, Outfit, Category, OutfitItemData } from "@/database";
-export { CATEGORIES } from "@/database";
+export type { Clothing, Outfit, Category, OutfitItemData, ThemeName } from "@/database";
 
 export async function createFormDataFile(
   fileUri: string,
@@ -43,7 +42,7 @@ export const convertToLocalTimeStr = (utcDateStr: string): string => {
 
 // Local-only API surface — calls database directly
 export const clothingApi = {
-  getCategories: async () => DB.CATEGORIES,
+  getCategories: async () => DB.getAllCategories(),
 
   upload: async (fileUri: string) => {
     const imageUrl = await DB.imageToBase64(fileUri);
@@ -72,4 +71,21 @@ export const outfitApi = {
   getById: async (id: string) => DB.getOutfitById(id),
   update: async (id: string, data: { name?: string; items?: { clothingId: string; position?: { x: number; y: number } }[] }) => DB.updateOutfit(id, data),
   delete: async (id: string) => { await DB.deleteOutfit(id); },
+};
+
+// Category management API
+export const categoryApi = {
+  getAll: async () => DB.getAllCategories(),
+  create: async (name: string) => DB.createCategory(name),
+  update: async (id: string, name: string) => DB.updateCategory(id, name),
+  delete: async (id: string) => DB.deleteCategory(id),
+  addSubcategory: async (categoryId: string, name: string) => DB.addSubcategory(categoryId, name),
+  updateSubcategory: async (subId: string, name: string) => DB.updateSubcategory(subId, name),
+  deleteSubcategory: async (subId: string) => DB.deleteSubcategory(subId),
+};
+
+// Theme settings
+export const themeApi = {
+  get: async () => DB.getSetting("theme", "default") as Promise<DB.ThemeName>,
+  set: async (theme: DB.ThemeName) => DB.setSetting("theme", theme),
 };
