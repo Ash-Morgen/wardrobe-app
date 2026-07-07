@@ -21,15 +21,6 @@ import Toast from 'react-native-toast-message';
 import { clothingApi, Category } from '@/utils/api';
 import * as FileSystem from 'expo-file-system/legacy';
 
-const CATEGORY_OPTIONS = [
-  { id: 'tops', name: '上衣' },
-  { id: 'bottoms', name: '裤子' },
-  { id: 'outerwear', name: '外套' },
-  { id: 'dresses', name: '裙子' },
-  { id: 'bags', name: '包包' },
-  { id: 'accessories', name: '配饰' },
-];
-
 export default function AddClothingScreen() {
   const router = useSafeRouter();
   const cameraRef = useRef<CameraView>(null);
@@ -142,7 +133,7 @@ export default function AddClothingScreen() {
 
     setIsSaving(true);
     try {
-      const name = clothingName.trim() || `${CATEGORY_OPTIONS.find(c => c.id === selectedCategory)?.name || '衣服'}_${Date.now()}`;
+      const name = clothingName.trim() || `${categories.find(c => c.id === selectedCategory)?.name || '衣服'}_${Date.now()}`;
       await clothingApi.create({
         name,
         category: selectedCategory,
@@ -226,7 +217,7 @@ export default function AddClothingScreen() {
           <View style={styles.quickSelectContainer}>
             <Text style={styles.sectionTitle}>选择分类</Text>
             <View style={styles.categoryGrid}>
-              {CATEGORY_OPTIONS.map((cat) => (
+              {categories.map((cat) => (
                 <TouchableOpacity
                   key={cat.id}
                   style={[
@@ -310,7 +301,7 @@ export default function AddClothingScreen() {
                 衣服名称：{clothingName || '未命名'}
               </Text>
               <Text style={styles.modalText}>
-                分类：{CATEGORY_OPTIONS.find(c => c.id === selectedCategory)?.name || selectedCategory}
+                分类：{categories.find(c => c.id === selectedCategory)?.name || selectedCategory}
               </Text>
               <View style={styles.modalButtons}>
                 <TouchableOpacity
