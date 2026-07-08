@@ -32,7 +32,11 @@ config.resolver.blockList = [
   /.*node_modules\/\.pnpm\/.*_tmp_\d+.*/,
 ];
 
-const BACKEND_TARGET = 'http://localhost:9091';
+// ExecuTorch 模型文件扩展名（.pte 和 .bin）
+config.resolver.assetExts.push('pte');
+config.resolver.assetExts.push('bin');
+
+const BACKEND_TARGET
 
 const apiProxy = createProxyMiddleware({
   target: BACKEND_TARGET,
